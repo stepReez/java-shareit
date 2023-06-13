@@ -9,7 +9,9 @@ import javax.validation.constraints.Email;
 @Builder
 public class UserDto {
     private long id;
+
     private String name;
+
     @Email
     private String email;
 }

@@ -12,7 +12,6 @@ import java.util.List;
 
 @Service
 public class UserService {
-
     private final Logger log = LoggerFactory.getLogger(UserService.class);
 
     UserRepository userRepository;
@@ -35,8 +34,8 @@ public class UserService {
         return userDto;
     }
 
-    public UserDto updateUser(User user) {
-        UserDto userDto = userRepository.updateUser(user);
+    public UserDto updateUser(User user, long id) {
+        UserDto userDto = userRepository.updateUser(user, id);
         log.info("User with id = {} updated", userDto.getId());
         return userDto;
     }

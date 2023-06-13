@@ -1,7 +1,9 @@
 package ru.practicum.shareit.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.exception.EmailNullException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
@@ -15,11 +17,16 @@ import java.util.List;
 @RestController
 @RequestMapping(path = "/users")
 public class UserController {
-
     private final UserService userService;
     @Autowired
     public UserController(UserService userService) {
         this.userService = userService;
+    }
+
+    @ExceptionHandler(EmailNullException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public HttpStatus handleBadRequest(final EmailNullException e) {
+        return HttpStatus.BAD_REQUEST;
     }
 
     @GetMapping
@@ -32,9 +39,9 @@ public class UserController {
         return userService.createUser(user);
     }
 
-    @PutMapping
-    public UserDto updateUser(@Valid @RequestBody User user) {
-        return userService.updateUser(user);
+    @PatchMapping("/{id}")
+    public UserDto updateUser(@Valid @RequestBody User user, @PathVariable long id) {
+        return userService.updateUser(user, id);
     }
 
     @GetMapping("/{id}")
@@ -42,7 +49,7 @@ public class UserController {
         return userService.findUser(id);
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{id}")
     public  void deleteUser(@PathVariable long id) {
         userService.deleteUser(id);
     }

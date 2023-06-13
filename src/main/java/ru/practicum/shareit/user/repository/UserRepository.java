@@ -8,7 +8,7 @@ import java.util.List;
 public interface UserRepository {
     UserDto createUser(User user);
 
-    UserDto updateUser(User user);
+    UserDto updateUser(User user, long id);
 
     List<UserDto> getUsers();
 
