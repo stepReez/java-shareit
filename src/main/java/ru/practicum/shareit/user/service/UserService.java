@@ -3,7 +3,6 @@ package ru.practicum.shareit.user.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
@@ -19,7 +18,7 @@ public class UserService {
     UserRepository userRepository;
 
     @Autowired
-    public UserService(@Qualifier("InMemoryUserRepository") UserRepository userRepository) {
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
