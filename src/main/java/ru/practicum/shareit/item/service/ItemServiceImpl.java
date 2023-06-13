@@ -5,18 +5,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
-import ru.practicum.shareit.user.service.UserService;
+import ru.practicum.shareit.user.service.UserServiceImpl;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class ItemServiceImpl implements ItemService {
-    private final Logger log = LoggerFactory.getLogger(UserService.class);
+    private final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
 
-    ItemRepository itemRepository;
+    private final ItemRepository itemRepository;
 
     @Autowired
     public ItemServiceImpl(ItemRepository itemRepository) {
@@ -24,7 +23,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto createItem(Item item, long userId) {
+    public ItemDto createItem(ItemDto item, long userId) {
         item.setOwner(userId);
         ItemDto itemDto = itemRepository.createItem(item);
         log.info("Item with id {} created", itemDto.getId());
@@ -32,7 +31,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto patchItem(Item item, long itemId, long userId) {
+    public ItemDto patchItem(ItemDto item, long itemId, long userId) {
         ItemDto itemDto = itemRepository.patchItem(item, itemId, userId);
         log.info("Item with id {} patched", itemId);
         return itemDto;
