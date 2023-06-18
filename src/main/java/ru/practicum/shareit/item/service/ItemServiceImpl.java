@@ -28,8 +28,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto createItem(ItemDto item, long userId) {
-        valid(item);
         item.setOwner(userId);
+        valid(item);
         Item itemDto = itemRepository.save(ItemMapper.toItem(item));
         log.info("Item with id {} created", itemDto.getId());
         return ItemMapper.toItemDto(itemDto);
@@ -37,9 +37,18 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto patchItem(ItemDto item, long itemId, long userId) {
-        item.setId(itemId);
-        Item itemDto = itemRepository.save(ItemMapper.toItem(item));
-        log.info("Item with id {} patched", itemId);
+        Item newItem = itemRepository.findById(itemId).get();
+        Item itemDto;
+        if (newItem.getOwner() == userId) {
+            patch(newItem, ItemMapper.toItem(item));
+            newItem.setId(itemId);
+            itemDto = itemRepository.save(newItem);
+            log.info("Item with id {} patched", itemId);
+        } else {
+            throw new NotFoundException(
+                    String.format("User with id %d is not owner of the item with id %d", userId, itemId)
+            );
+        }
         return ItemMapper.toItemDto(itemDto);
     }
 
@@ -63,7 +72,8 @@ public class ItemServiceImpl implements ItemService {
     public List<ItemDto> searchItem(String text) {
         List<ItemDto> itemDtoList = new ArrayList<>();
         if (!text.isBlank()) {
-            itemDtoList = itemRepository.findByNameContainingIgnoreCase(text).stream()
+            itemDtoList = itemRepository.findByNameOrDescriptionContainingIgnoreCase(text, text).stream()
+                    .filter(Item::getAvailable)
                     .map(ItemMapper::toItemDto)
                     .collect(Collectors.toList());
         }
@@ -81,8 +91,21 @@ public class ItemServiceImpl implements ItemService {
         if (item.getDescription() == null || item.getDescription().isEmpty()) {
             throw new ItemBadRequestException("Item description can't be empty");
         }
-        if (userRepository.findAll().stream().noneMatch(userDto -> userDto.getId() == item.getOwner())) {
+        if (userRepository.findById(item.getOwner()).isEmpty()) {
             throw new NotFoundException(String.format("User with id %d not found", item.getOwner()));
         }
+    }
+
+    private Item patch(Item oldItem, Item newItem) {
+        if (newItem.getName() != null) {
+            oldItem.setName(newItem.getName());
+        }
+        if (newItem.getDescription() != null) {
+            oldItem.setDescription(newItem.getDescription());
+        }
+        if (newItem.getAvailable() != null) {
+            oldItem.setAvailable(newItem.getAvailable());
+        }
+        return oldItem;
     }
 }

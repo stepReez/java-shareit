@@ -39,9 +39,11 @@ public class UserServiceImpl {
     }
 
     public UserDto updateUser(UserDto user, long id) {
-        user.setId(id);
-        User userDto = userRepository.save(UserMapper.toUser(user));
-        log.info("User with id = {} updated", userDto.getId());
+        User newUser = userRepository.findById(id).get();
+        patch(newUser, UserMapper.toUser(user));
+        newUser.setId(id);
+        User userDto = userRepository.save(newUser);
+        log.info("User with id = {} updated", newUser.getId());
         return UserMapper.toUserDto(userDto);
     }
 
@@ -64,5 +66,20 @@ public class UserServiceImpl {
                 .anyMatch(user -> user.getEmail().equals(email))) {
             throw new EmailException("Email should be unique");
         }
+    }
+
+    private User patch(User oldUser, User newUser) {
+        if (userRepository.findAll().stream()
+                .anyMatch(user -> user.getEmail().equals(newUser.getEmail()) &&
+                        !oldUser.getEmail().equals(newUser.getEmail()))) {
+            throw new EmailException("Email should be unique");
+        }
+        if (newUser.getEmail() != null) {
+            oldUser.setEmail(newUser.getEmail());
+        }
+        if (newUser.getName() != null) {
+            oldUser.setName(newUser.getName());
+        }
+        return oldUser;
     }
 }
