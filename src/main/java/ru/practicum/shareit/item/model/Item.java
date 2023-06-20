@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.shareit.request.ItemRequest;
 
 import javax.persistence.*;
 
@@ -26,6 +25,4 @@ public class Item {
     private Boolean available;
 
     private long owner;
-
-    //private ItemRequest request;
 }

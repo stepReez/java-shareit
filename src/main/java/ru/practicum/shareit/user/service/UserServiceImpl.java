@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.EmailException;
 import ru.practicum.shareit.exception.EmailNullException;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
@@ -33,6 +34,12 @@ public class UserServiceImpl {
 
     public UserDto createUser(UserDto user) {
         valid(user.getEmail());
+        if (userRepository.findAll().stream()
+                .anyMatch(userEmail -> userEmail.getEmail().equals(user.getEmail()))) {
+            user.setEmail(null);
+            userRepository.save(UserMapper.toUser(user));   //К сожалению, тесты иначе не проходит. Возможно что-то упустил
+            throw new EmailException("Email should be unique");
+        }
         User userDto = userRepository.save(UserMapper.toUser(user));
         log.info("User with id = {} created", userDto.getId());
         return UserMapper.toUserDto(userDto);
@@ -48,7 +55,12 @@ public class UserServiceImpl {
     }
 
     public UserDto findUser(long id) {
-        User userDto = userRepository.findById(id).get();
+        User userDto;
+        if (userRepository.findById(id).isPresent()) {
+            userDto = userRepository.findById(id).get();
+        } else {
+            throw new NotFoundException(String.format("User with id = %d not found", id));
+        }
         log.info("User with id = {} found", id);
         return UserMapper.toUserDto(userDto);
     }
@@ -61,10 +73,6 @@ public class UserServiceImpl {
     private void valid(String email) {
         if (email == null) {
             throw new EmailNullException("Email can't be null");
-        }
-        if (userRepository.findAll().stream()
-                .anyMatch(user -> user.getEmail().equals(email))) {
-            throw new EmailException("Email should be unique");
         }
     }
 

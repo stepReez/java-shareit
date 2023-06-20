@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.shareit.booking.util.BookingStatus;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
 
@@ -12,16 +14,16 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BookingDto {
+public class BookingDtoResponse {
     private long id;
 
     private LocalDateTime start;
 
     private LocalDateTime end;
 
-    private long itemId;
+    private Item item;
 
-    private long bookerId;
+    private User booker;
 
     private BookingStatus status;
 }

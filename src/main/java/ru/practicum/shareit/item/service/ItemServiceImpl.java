@@ -4,15 +4,25 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.booking.util.BookingMapper;
+import ru.practicum.shareit.comment.dto.CommentDto;
+import ru.practicum.shareit.comment.model.Comment;
+import ru.practicum.shareit.comment.repository.CommentRepository;
+import ru.practicum.shareit.comment.util.CommentMapper;
 import ru.practicum.shareit.exception.ItemBadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemDtoBooking;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.item.util.ItemMapper;
+import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.user.service.UserServiceImpl;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +35,10 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
 
     private final UserRepository userRepository;
+
+    private final BookingRepository bookingRepository;
+
+    private final CommentRepository commentRepository;
 
     @Override
     public ItemDto createItem(ItemDto item, long userId) {
@@ -53,17 +67,67 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto findItem(long itemId) {
-        Item itemDto = itemRepository.findById(itemId).get();
+    public ItemDtoBooking findItem(long itemId, long userId) {
+        Item item;
+        ItemDtoBooking itemDtoBooking;
+        if (itemRepository.findById(itemId).isPresent()) {
+            item = itemRepository.findById(itemId).get();
+            itemDtoBooking = ItemMapper.toItemDtoBooking(item);
+            List<Booking> nextBookings = new ArrayList<>();
+            List<Booking> lastBookings = new ArrayList<>();
+            if (item.getOwner() == userId) {
+                lastBookings = bookingRepository.getLastBookingByItemId(itemId, LocalDateTime.now());
+                nextBookings = bookingRepository.getNextBookingByItemId(itemId, LocalDateTime.now());
+            }
+
+            if (!lastBookings.isEmpty())
+                itemDtoBooking.setLastBooking(BookingMapper.toBookingDto(lastBookings.get(0)));
+            if (!nextBookings.isEmpty())
+                itemDtoBooking.setNextBooking(BookingMapper.toBookingDto(nextBookings.get(0)));
+
+
+            itemDtoBooking.setComments(commentRepository.findByItemId(itemId).stream()
+                        .map(CommentMapper::toCommentDto)
+                        .collect(Collectors.toList()));
+
+        } else {
+            throw new NotFoundException(String.format("Item with id = %d not found", itemId));
+        }
         log.info("Item with id {} found", itemId);
-        return ItemMapper.toItemDto(itemDto);
+        return itemDtoBooking;
     }
 
     @Override
-    public List<ItemDto> findItemsByUser(long userId) {
-        List<ItemDto> itemDtoList = itemRepository.findByOwner(userId).stream()
-                .map(ItemMapper::toItemDto)
+    public List<ItemDtoBooking> findItemsByUser(long userId) {
+        List<ItemDtoBooking> itemDtoList = itemRepository.findByOwner(userId).stream()
+                .map(ItemMapper::toItemDtoBooking)
                 .collect(Collectors.toList());
+        itemDtoList.stream()
+                .filter(itemDtoBooking ->
+                        !bookingRepository.getNextBookingByItemId(
+                                itemDtoBooking.getId(), LocalDateTime.now()).isEmpty())
+                .forEach(itemDtoBooking ->
+                itemDtoBooking.setNextBooking(
+                        BookingMapper.toBookingDto(
+                        bookingRepository.getNextBookingByItemId(itemDtoBooking.getId(), LocalDateTime.now()).get(0))
+                )
+        );
+        itemDtoList.stream()
+                .filter(itemDtoBooking ->
+                        !bookingRepository.getLastBookingByItemId(
+                                itemDtoBooking.getId(), LocalDateTime.now()).isEmpty())
+                .forEach(itemDtoBooking ->
+                itemDtoBooking.setLastBooking(
+                        BookingMapper.toBookingDto(
+                        bookingRepository.getLastBookingByItemId(itemDtoBooking.getId(), LocalDateTime.now()).get(0))
+                )
+        );
+        itemDtoList.stream()
+                .filter(itemDtoBooking -> !commentRepository.findByItemId(itemDtoBooking.getId()).isEmpty())
+                .forEach(itemDtoBooking ->
+                itemDtoBooking.setComments(commentRepository.findByItemId(itemDtoBooking.getId()).stream()
+                .map(CommentMapper::toCommentDto).
+                collect(Collectors.toList())));
         log.info("All items of the user with id {} found", userId);
         return itemDtoList;
     }
@@ -79,6 +143,21 @@ public class ItemServiceImpl implements ItemService {
         }
         log.info("All items matching \"{}\" found", text);
         return itemDtoList;
+    }
+
+    @Override
+    public CommentDto createComment(CommentDto commentDto, long itemId, long userId) {
+        commentDto.setCreated(LocalDateTime.now());
+        if (bookingRepository.getBookingByItemAndUser(itemId, userId).isEmpty()) {
+            throw new ItemBadRequestException(String.format("User with id = %d did not book item with id = %d", userId, itemId));
+        }
+        if (commentDto.getText().isBlank()) {
+            throw new ItemBadRequestException("Text cannot be blank");
+        }
+        User user = userRepository.findById(userId).get();
+        Item item = itemRepository.findById(itemId).get();
+        Comment comment = commentRepository.save(CommentMapper.toComment(commentDto, item, user));
+        return CommentMapper.toCommentDto(comment);
     }
 
     private void valid(ItemDto item) {
