@@ -126,8 +126,8 @@ public class ItemServiceImpl implements ItemService {
                 .filter(itemDtoBooking -> !commentRepository.findByItemId(itemDtoBooking.getId()).isEmpty())
                 .forEach(itemDtoBooking ->
                 itemDtoBooking.setComments(commentRepository.findByItemId(itemDtoBooking.getId()).stream()
-                .map(CommentMapper::toCommentDto).
-                collect(Collectors.toList())));
+                .map(CommentMapper::toCommentDto)
+                        .collect(Collectors.toList())));
         log.info("All items of the user with id {} found", userId);
         return itemDtoList;
     }
