@@ -96,35 +96,33 @@ public class BookingServiceImpl implements BookingService {
         if (userRepository.findById(userId).isEmpty()) {
             throw new NotFoundException(String.format("User with id = %d not found", userId));
         }
+        List<Booking> bookingList;
         switch (state) {
             case "ALL":
-                return bookingRepository.findByBookerIdOrderByStartDesc(userId).stream()
-                        .map(BookingMapper::toBookingDtoResponse)
-                        .collect(Collectors.toList());
+                bookingList = bookingRepository.findByBookerIdOrderByStartDesc(userId);
+                break;
             case "CURRENT":
-                return bookingRepository.findCurrentByBooker(userId, LocalDateTime.now()).stream()
-                        .map(BookingMapper::toBookingDtoResponse)
-                        .collect(Collectors.toList());
+                bookingList = bookingRepository.findCurrentByBooker(userId, LocalDateTime.now());
+                break;
             case "PAST":
-                return bookingRepository.findPastByBooker(userId, LocalDateTime.now()).stream()
-                        .map(BookingMapper::toBookingDtoResponse)
-                        .collect(Collectors.toList());
+                bookingList = bookingRepository.findPastByBooker(userId, LocalDateTime.now());
+                break;
             case "FUTURE":
-                return bookingRepository.findFutureByBooker(userId, LocalDateTime.now()).stream()
-                        .map(BookingMapper::toBookingDtoResponse)
-                        .collect(Collectors.toList());
+                bookingList = bookingRepository.findFutureByBooker(userId, LocalDateTime.now());
+                break;
             case "WAITING":
-                return bookingRepository.findByStateWaitingByBooker(userId).stream()
-                        .map(BookingMapper::toBookingDtoResponse)
-                        .collect(Collectors.toList());
+                bookingList =  bookingRepository.findByStateWaitingByBooker(userId);
+                break;
             case "REJECTED":
-                return bookingRepository.findByStateRejectedByBooker(userId).stream()
-                        .map(BookingMapper::toBookingDtoResponse)
-                        .collect(Collectors.toList());
+                bookingList = bookingRepository.findByStateRejectedByBooker(userId);
+                break;
             default :
                 throw new UnknownStateException("Unknown state: " + state);
 
         }
+        return bookingList.stream()
+                .map(BookingMapper::toBookingDtoResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -132,32 +130,31 @@ public class BookingServiceImpl implements BookingService {
         if (userRepository.findById(userId).isEmpty()) {
             throw new NotFoundException(String.format("User with id = %d not found", userId));
         }
+        List<Booking> bookingList;
         switch (state) {
             case "ALL":
-                return bookingRepository.findAllByOwner(userId).stream()
-                        .map(BookingMapper::toBookingDtoResponse)
-                        .collect(Collectors.toList());
+                bookingList = bookingRepository.findAllByOwner(userId);
+                break;
             case "CURRENT":
-                return bookingRepository.findCurrentByOwner(userId, LocalDateTime.now()).stream()
-                        .map(BookingMapper::toBookingDtoResponse)
-                        .collect(Collectors.toList());
+                bookingList =  bookingRepository.findCurrentByOwner(userId, LocalDateTime.now());
+                break;
             case "PAST":
-                return bookingRepository.findPastByOwner(userId, LocalDateTime.now()).stream()
-                        .map(BookingMapper::toBookingDtoResponse)
-                        .collect(Collectors.toList());
+                bookingList = bookingRepository.findPastByOwner(userId, LocalDateTime.now());
+                break;
             case "FUTURE":
-                return bookingRepository.findFutureByOwner(userId, LocalDateTime.now()).stream()
-                        .map(BookingMapper::toBookingDtoResponse)
-                        .collect(Collectors.toList());
+                bookingList = bookingRepository.findFutureByOwner(userId, LocalDateTime.now());
+                break;
             case "WAITING":
             case "REJECTED":
-                return bookingRepository.findStateByOwner(userId, state).stream()
-                        .map(BookingMapper::toBookingDtoResponse)
-                        .collect(Collectors.toList());
+                bookingList = bookingRepository.findStateByOwner(userId, state);
+                break;
             default :
                 throw new UnknownStateException("Unknown state: " + state);
 
         }
+        return bookingList.stream()
+                .map(BookingMapper::toBookingDtoResponse)
+                .collect(Collectors.toList());
     }
 
     private void valid(BookingDto booking, long id) {

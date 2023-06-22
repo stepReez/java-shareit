@@ -153,7 +153,8 @@ public class ItemServiceImpl implements ItemService {
     public CommentDto createComment(CommentDto commentDto, long itemId, long userId) {
         commentDto.setCreated(LocalDateTime.now());
         if (bookingRepository.getBookingByItemAndUser(itemId, userId).isEmpty()) {
-            throw new ItemBadRequestException(String.format("User with id = %d did not book item with id = %d", userId, itemId));
+            throw new ItemBadRequestException(
+                    String.format("User with id = %d did not book item with id = %d", userId, itemId));
         }
         if (commentDto.getText().isBlank()) {
             throw new ItemBadRequestException("Text cannot be blank");

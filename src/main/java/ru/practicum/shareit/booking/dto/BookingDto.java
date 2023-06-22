@@ -10,7 +10,6 @@ import ru.practicum.shareit.booking.util.BookingStatus;
 
 import javax.validation.constraints.Future;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import java.time.LocalDateTime;
 
 @Getter
