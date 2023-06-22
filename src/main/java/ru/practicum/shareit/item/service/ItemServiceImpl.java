@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.util.BookingMapper;
@@ -15,6 +16,7 @@ import ru.practicum.shareit.exception.ItemBadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemDtoBooking;
+import ru.practicum.shareit.item.dto.ItemDtoCreate;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.item.util.ItemMapper;
@@ -28,6 +30,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
     private final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
@@ -41,7 +44,8 @@ public class ItemServiceImpl implements ItemService {
     private final CommentRepository commentRepository;
 
     @Override
-    public ItemDto createItem(ItemDto item, long userId) {
+    public ItemDto createItem(ItemDtoCreate itemDtoCreate, long userId) {
+        ItemDto item = ItemMapper.fromCrateToItemDto(itemDtoCreate);
         item.setOwner(userId);
         valid(item);
         Item itemDto = itemRepository.save(ItemMapper.toItem(item));
@@ -51,7 +55,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto patchItem(ItemDto item, long itemId, long userId) {
-        Item newItem = itemRepository.findById(itemId).get();
+        Item newItem = itemRepository.findById(itemId).orElseThrow(() -> new NotFoundException("Item not found"));
         Item itemDto;
         if (newItem.getOwner() == userId) {
             patch(newItem, ItemMapper.toItem(item));
@@ -154,28 +158,19 @@ public class ItemServiceImpl implements ItemService {
         if (commentDto.getText().isBlank()) {
             throw new ItemBadRequestException("Text cannot be blank");
         }
-        User user = userRepository.findById(userId).get();
-        Item item = itemRepository.findById(itemId).get();
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
+        Item item = itemRepository.findById(itemId).orElseThrow(() -> new NotFoundException("Item not found"));
         Comment comment = commentRepository.save(CommentMapper.toComment(commentDto, item, user));
         return CommentMapper.toCommentDto(comment);
     }
 
     private void valid(ItemDto item) {
-        if (item.getAvailable() == null) {
-            throw new ItemBadRequestException("Item can't be unavailable");
-        }
-        if (item.getName() == null || item.getName().isEmpty()) {
-            throw new ItemBadRequestException("Item name can't be empty");
-        }
-        if (item.getDescription() == null || item.getDescription().isEmpty()) {
-            throw new ItemBadRequestException("Item description can't be empty");
-        }
         if (userRepository.findById(item.getOwner()).isEmpty()) {
             throw new NotFoundException(String.format("User with id %d not found", item.getOwner()));
         }
     }
 
-    private Item patch(Item oldItem, Item newItem) {
+    private void patch(Item oldItem, Item newItem) {
         if (newItem.getName() != null) {
             oldItem.setName(newItem.getName());
         }
@@ -185,6 +180,5 @@ public class ItemServiceImpl implements ItemService {
         if (newItem.getAvailable() != null) {
             oldItem.setAvailable(newItem.getAvailable());
         }
-        return oldItem;
     }
 }

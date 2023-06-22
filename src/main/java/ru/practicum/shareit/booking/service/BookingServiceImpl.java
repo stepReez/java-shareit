@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingDtoResponse;
 import ru.practicum.shareit.booking.model.Booking;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
 
@@ -45,15 +47,16 @@ public class BookingServiceImpl implements BookingService {
         valid(bookingDto, itemRepository.findById(bookingDto.getItemId()).get().getOwner());
         Booking booking = bookingRepository.save(BookingMapper.toBooking(
                 bookingDto,
-                itemRepository.findById(bookingDto.getItemId()).get(),
-                userRepository.findById(userId).get()));
+                itemRepository.findById(bookingDto.getItemId()).orElse(new Item()),
+                userRepository.findById(userId).orElse(new User())));
         log.info("Booking with id = {} created", booking.getId());
         return BookingMapper.toBookingDtoResponse(booking);
     }
 
     @Override
     public BookingDtoResponse patchBooking(long bookingId, boolean approved, long userId) {
-        Booking booking = bookingRepository.findById(bookingId).get();
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(
+                () -> new NotFoundException("Booking not found"));
         Item item = booking.getItem();
         if (item.getOwner() == userId && booking.getStatus().equals(BookingStatus.APPROVED)) {
             throw new BookingBadRequestException("Cannot change approved status");
@@ -158,9 +161,6 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private void valid(BookingDto booking, long id) {
-        if (booking.getStart() == null || booking.getEnd() == null) {
-            throw new BookingBadRequestException("End or start of booking cannot be null");
-        }
         if (booking.getStart().equals(booking.getEnd())) {
             throw new BookingBadRequestException("End and start of booking cannot be equal");
         }
@@ -169,12 +169,6 @@ public class BookingServiceImpl implements BookingService {
         }
         if (itemRepository.findById(booking.getItemId()).isEmpty()) {
             throw new NotFoundException(String.format("Item with id = %d not found", booking.getItemId()));
-        }
-        if (booking.getEnd().isBefore(LocalDateTime.now())) {
-            throw new BookingBadRequestException("End of booking cannot be in the past");
-        }
-        if (booking.getStart().isBefore(LocalDateTime.now())) {
-            throw new BookingBadRequestException("Start of booking cannot be in the past");
         }
         if (booking.getStart().isAfter(booking.getEnd())) {
             throw new BookingBadRequestException("End of booking cannot be before the start");

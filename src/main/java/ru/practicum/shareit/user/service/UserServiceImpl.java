@@ -37,7 +37,7 @@ public class UserServiceImpl {
         if (userRepository.findAll().stream()
                 .anyMatch(userEmail -> userEmail.getEmail().equals(user.getEmail()))) {
             user.setEmail(null);
-            userRepository.save(UserMapper.toUser(user));   //К сожалению, тесты иначе не проходит. Возможно что-то упустил
+            userRepository.save(UserMapper.toUser(user));
             throw new EmailException("Email should be unique");
         }
         User userDto = userRepository.save(UserMapper.toUser(user));
@@ -46,7 +46,7 @@ public class UserServiceImpl {
     }
 
     public UserDto updateUser(UserDto user, long id) {
-        User newUser = userRepository.findById(id).get();
+        User newUser = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User not found"));
         patch(newUser, UserMapper.toUser(user));
         newUser.setId(id);
         User userDto = userRepository.save(newUser);
@@ -76,7 +76,7 @@ public class UserServiceImpl {
         }
     }
 
-    private User patch(User oldUser, User newUser) {
+    private void patch(User oldUser, User newUser) {
         if (userRepository.findAll().stream()
                 .anyMatch(user -> user.getEmail().equals(newUser.getEmail()) &&
                         !oldUser.getEmail().equals(newUser.getEmail()))) {
@@ -88,6 +88,5 @@ public class UserServiceImpl {
         if (newUser.getName() != null) {
             oldUser.setName(newUser.getName());
         }
-        return oldUser;
     }
 }

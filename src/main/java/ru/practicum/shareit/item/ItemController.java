@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.comment.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemDtoBooking;
+import ru.practicum.shareit.item.dto.ItemDtoCreate;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.util.Headers;
 
@@ -18,7 +19,7 @@ public class ItemController {
     private final ItemService itemService;
 
     @PostMapping
-    public ItemDto createItem(@Valid @RequestBody ItemDto item, @RequestHeader(Headers.X_SHARER_USER_ID) long userId) {
+    public ItemDto createItem(@Valid @RequestBody ItemDtoCreate item, @RequestHeader(Headers.X_SHARER_USER_ID) long userId) {
         return itemService.createItem(item, userId);
     }
 

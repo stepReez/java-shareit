@@ -5,30 +5,22 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.practicum.shareit.booking.dto.BookingDto;
-import ru.practicum.shareit.comment.dto.CommentDto;
 
-import java.util.List;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ItemDtoBooking {
-    private long id;
-
+public class ItemDtoCreate {
+    @NotEmpty(message = "Item name can't be empty")
     private String name;
 
+    @NotEmpty(message = "Item description can't be empty")
     private String description;
 
+    @NotNull(message = "Item can't be unavailable")
     private Boolean available;
-
-    private long owner;
-
-    private BookingDto lastBooking;
-
-    private BookingDto nextBooking;
-
-    private List<CommentDto> comments;
 }
