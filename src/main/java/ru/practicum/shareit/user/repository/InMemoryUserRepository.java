@@ -14,12 +14,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
-public class InMemoryUserRepository implements UserRepository {
+public class InMemoryUserRepository {
     private final Map<Long, User> users = new HashMap<>();
 
     private long idCounter = 1;
 
-    @Override
     public UserDto createUser(UserDto userDto) {
         User user = UserMapper.toUser(userDto);
         valid(user.getEmail());
@@ -29,7 +28,6 @@ public class InMemoryUserRepository implements UserRepository {
         return UserMapper.toUserDto(user);
     }
 
-    @Override
     public UserDto updateUser(UserDto userDto, long id) {
         User user = UserMapper.toUser(userDto);
         if (idCounter > id) {
@@ -42,14 +40,12 @@ public class InMemoryUserRepository implements UserRepository {
         }
     }
 
-    @Override
     public List<UserDto> getUsers() {
         return users.values().stream()
                 .map(UserMapper::toUserDto)
                 .collect(Collectors.toList());
     }
 
-    @Override
     public UserDto findUser(long id) {
         if (idCounter > id) {
             return UserMapper.toUserDto(users.get(id));
@@ -58,7 +54,6 @@ public class InMemoryUserRepository implements UserRepository {
         }
     }
 
-    @Override
     public void deleteUser(long id) {
         if (idCounter > id) {
             users.remove(id);

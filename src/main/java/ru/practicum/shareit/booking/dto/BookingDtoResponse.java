@@ -7,9 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.practicum.shareit.booking.util.BookingStatus;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.model.User;
 
-import javax.validation.constraints.Future;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Getter
@@ -17,22 +17,18 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BookingDto {
+public class BookingDtoResponse {
     private long id;
 
     @JsonFormat
-    @NotNull
-    @Future(message = "Start of booking cannot be in the past")
     private LocalDateTime start;
 
     @JsonFormat
-    @NotNull
-    @Future(message = "End of booking cannot be in the past")
     private LocalDateTime end;
 
-    private long itemId;
+    private Item item;
 
-    private long bookerId;
+    private User booker;
 
     private BookingStatus status;
 }

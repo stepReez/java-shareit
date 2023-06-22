@@ -13,7 +13,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
-public class InMemoryItemRepository implements ItemRepository {
+public class InMemoryItemRepository {
     private final Map<Long, Item> items = new LinkedHashMap<>();
 
     private long idCounter = 1;
@@ -25,7 +25,7 @@ public class InMemoryItemRepository implements ItemRepository {
         this.userRepository = userRepository;
     }
 
-    @Override
+
     public ItemDto createItem(ItemDto itemDto) {
         Item item = ItemMapper.toItem(itemDto);
         valid(item);
@@ -35,7 +35,6 @@ public class InMemoryItemRepository implements ItemRepository {
         return ItemMapper.toItemDto(item);
     }
 
-    @Override
     public ItemDto patchItem(ItemDto itemDto, long itemId, long userId) {
         Item item = ItemMapper.toItem(itemDto);
         Item oldItem = items.get(itemId);
@@ -50,12 +49,10 @@ public class InMemoryItemRepository implements ItemRepository {
         return ItemMapper.toItemDto(item);
     }
 
-    @Override
     public ItemDto findItem(long itemId) {
         return ItemMapper.toItemDto(items.get(itemId));
     }
 
-    @Override
     public List<ItemDto> findItemsByUser(long userId) {
         return items.values().stream()
                 .filter(item -> item.getOwner() == userId)
@@ -63,7 +60,6 @@ public class InMemoryItemRepository implements ItemRepository {
                 .collect(Collectors.toList());
     }
 
-    @Override
     public List<ItemDto> searchItem(String text) {
         return items.values().stream()
                 .filter(item -> (item.getName().toLowerCase().contains(text.toLowerCase()) ||
@@ -83,7 +79,7 @@ public class InMemoryItemRepository implements ItemRepository {
         if (item.getDescription() == null || item.getDescription().isEmpty()) {
             throw new ItemBadRequestException("Item description can't be empty");
         }
-        if (userRepository.getUsers().stream().noneMatch(userDto -> userDto.getId() == item.getOwner())) {
+        if (userRepository.findAll().stream().noneMatch(userDto -> userDto.getId() == item.getOwner())) {
             throw new NotFoundException(String.format("User with id %d not found", item.getOwner()));
         }
     }
