@@ -1,5 +1,6 @@
 package ru.practicum.shareit.booking.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -10,67 +11,67 @@ import java.util.List;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
-    List<Booking> findByBookerIdOrderByStartDesc(Long id);
+    List<Booking> findByBookerIdOrderByStartDesc(Long id, Pageable pageable);
 
     @Query("SELECT b FROM Booking AS b " +
             "join b.booker as u " +
             "where u.id = ?1 AND b.start > ?2 " +
             "order by b.start desc")
-    List<Booking> findFutureByBooker(Long id, LocalDateTime localDateTime);
+    List<Booking> findFutureByBooker(Long id, LocalDateTime localDateTime, Pageable pageable);
 
     @Query("SELECT b FROM Booking AS b " +
             "join b.booker as u " +
             "where u.id = ?1 AND b.start < ?2 AND b.end > ?2 " +
             "order by b.start desc")
-    List<Booking> findCurrentByBooker(Long id, LocalDateTime localDateTime);
+    List<Booking> findCurrentByBooker(Long id, LocalDateTime localDateTime, Pageable pageable);
 
     @Query("SELECT b FROM Booking AS b " +
             "join b.booker as u " +
             "where u.id = ?1 AND b.end < ?2 " +
             "order by b.start desc")
-    List<Booking> findPastByBooker(Long id, LocalDateTime localDateTime);
+    List<Booking> findPastByBooker(Long id, LocalDateTime localDateTime, Pageable pageable);
 
     @Query("SELECT b FROM Booking AS b " +
             "join b.booker as u " +
             "where u.id = ?1 AND status LIKE 'WAITING' " +
             "order by b.start desc")
-    List<Booking> findByStateWaitingByBooker(Long id);
+    List<Booking> findByStateWaitingByBooker(Long id, Pageable pageable);
 
     @Query("SELECT b FROM Booking AS b " +
             "join b.booker as u " +
             "where u.id = ?1 AND status LIKE 'REJECTED' " +
             "order by b.start desc")
-    List<Booking> findByStateRejectedByBooker(Long id);
+    List<Booking> findByStateRejectedByBooker(Long id, Pageable pageable);
 
     @Query("SELECT b FROM Booking AS b " +
             "join b.item as i " +
             "where i.owner = ?1 " +
             "order by b.start desc")
-    List<Booking> findAllByOwner(Long id);
+    List<Booking> findAllByOwner(Long id, Pageable pageable);
 
     @Query("SELECT b FROM Booking AS b " +
             "join b.item as i " +
             "where i.owner = ?1 AND b.start < ?2 AND b.end > ?2 " +
             "order by b.start desc")
-    List<Booking> findCurrentByOwner(Long id, LocalDateTime localDateTime);
+    List<Booking> findCurrentByOwner(Long id, LocalDateTime localDateTime, Pageable pageable);
 
     @Query("SELECT b FROM Booking AS b " +
             "join b.item as i " +
             "where i.owner = ?1 AND b.end < ?2 " +
             "order by b.start desc")
-    List<Booking> findPastByOwner(Long id, LocalDateTime localDateTime);
+    List<Booking> findPastByOwner(Long id, LocalDateTime localDateTime, Pageable pageable);
 
     @Query("SELECT b FROM Booking AS b " +
             "join b.item as i " +
             "where i.owner = ?1 AND status LIKE ?2 " +
             "order by b.start desc")
-    List<Booking> findStateByOwner(Long id, String state);
+    List<Booking> findStateByOwner(Long id, String state, Pageable pageable);
 
     @Query("SELECT b FROM Booking AS b " +
             "join b.item as i " +
             "where i.owner = ?1 AND b.start > ?2 " +
             "order by b.start desc")
-    List<Booking> findFutureByOwner(Long id, LocalDateTime localDateTime);
+    List<Booking> findFutureByOwner(Long id, LocalDateTime localDateTime, Pageable pageable);
 
     @Query("SELECT b FROM Booking AS b " +
             "join b.item as i " +

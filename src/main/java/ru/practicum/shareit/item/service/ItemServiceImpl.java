@@ -3,23 +3,28 @@ package ru.practicum.shareit.item.service;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.util.BookingMapper;
+import ru.practicum.shareit.exception.BookingBadRequestException;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemDtoBooking;
+import ru.practicum.shareit.item.dto.ItemDtoCreate;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.comment.dto.CommentDto;
 import ru.practicum.shareit.comment.model.Comment;
 import ru.practicum.shareit.comment.repository.CommentRepository;
 import ru.practicum.shareit.comment.util.CommentMapper;
 import ru.practicum.shareit.exception.ItemBadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.ItemDtoBooking;
-import ru.practicum.shareit.item.dto.ItemDtoCreate;
-import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.item.util.ItemMapper;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.repository.RequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.user.service.UserServiceImpl;
@@ -43,12 +48,18 @@ public class ItemServiceImpl implements ItemService {
 
     private final CommentRepository commentRepository;
 
+    private final RequestRepository requestRepository;
+
     @Override
     public ItemDto createItem(ItemDtoCreate itemDtoCreate, long userId) {
         ItemDto item = ItemMapper.fromCrateToItemDto(itemDtoCreate);
         item.setOwner(userId);
         valid(item);
-        Item itemDto = itemRepository.save(ItemMapper.toItem(item));
+        ItemRequest itemRequest = requestRepository.findById(itemDtoCreate.getRequestId()).orElse(null);
+        if (itemRequest != null) {
+            item.setRequestId(itemDtoCreate.getRequestId());
+        }
+        Item itemDto = itemRepository.save(ItemMapper.toItemCreate(item, itemRequest));
         log.info("Item with id {} created", itemDto.getId());
         return ItemMapper.toItemDto(itemDto);
     }
@@ -102,8 +113,12 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDtoBooking> findItemsByUser(long userId) {
-        List<ItemDtoBooking> itemDtoList = itemRepository.findByOwner(userId).stream()
+    public List<ItemDtoBooking> findItemsByUser(long userId, int from, int size) {
+        if (from < 0) {
+            throw new BookingBadRequestException("Bad request");
+        }
+        Pageable pageable = PageRequest.of(from / size, size);
+        List<ItemDtoBooking> itemDtoList = itemRepository.findByOwner(userId, pageable).stream()
                 .map(ItemMapper::toItemDtoBooking)
                 .collect(Collectors.toList());
         itemDtoList.stream()
@@ -137,10 +152,17 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> searchItem(String text) {
+    public List<ItemDto> searchItem(String text, int from, int size) {
         List<ItemDto> itemDtoList = new ArrayList<>();
         if (!text.isBlank()) {
-            itemDtoList = itemRepository.findByNameOrDescriptionContainingIgnoreCase(text, text).stream()
+            if (from < 0) {
+                throw new BookingBadRequestException("Bad request");
+            }
+            Pageable pageable = PageRequest.of(from / size, size);
+            itemDtoList = itemRepository.findByNameOrDescriptionContainingIgnoreCase(text,
+                            text,
+                            pageable)
+                    .stream()
                     .filter(Item::getAvailable)
                     .map(ItemMapper::toItemDto)
                     .collect(Collectors.toList());

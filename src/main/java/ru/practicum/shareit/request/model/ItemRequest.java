@@ -1,11 +1,12 @@
-package ru.practicum.shareit.item.model;
+package ru.practicum.shareit.request.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -14,28 +15,29 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import java.time.LocalDateTime;
 
+/**
+ * TODO Sprint add-item-requests.
+ */
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "items")
-public class Item {
+@Table(name = "item_requests")
+public class ItemRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    private String name;
-
     private String description;
 
-    private Boolean available;
-
-    private long owner;
-
     @ManyToOne
-    @JoinColumn(name = "request_id")
-    private ItemRequest request;
+    @JoinColumn(name = "requester_id")
+    private User requester;
+
+    @JsonFormat
+    private LocalDateTime created;
 }

@@ -3,7 +3,6 @@ package ru.practicum.shareit.item.dto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import ru.practicum.shareit.request.ItemRequest;
 
 @Getter
 @Setter
@@ -19,5 +18,5 @@ public class ItemDto {
 
     private long owner;
 
-    private ItemRequest request;
+    private long requestId;
 }
