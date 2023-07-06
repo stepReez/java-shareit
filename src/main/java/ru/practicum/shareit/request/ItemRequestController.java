@@ -16,9 +16,6 @@ import ru.practicum.shareit.util.Headers;
 import javax.validation.Valid;
 import java.util.List;
 
-/**
- * TODO Sprint add-item-requests.
- */
 @RestController
 @RequestMapping(path = "/requests")
 @RequiredArgsConstructor

@@ -16,7 +16,6 @@ import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.util.Headers;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController

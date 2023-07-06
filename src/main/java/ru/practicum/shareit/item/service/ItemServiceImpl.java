@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.util.BookingMapper;
-import ru.practicum.shareit.exception.BookingBadRequestException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemDtoBooking;
 import ru.practicum.shareit.item.dto.ItemDtoCreate;
@@ -115,7 +114,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<ItemDtoBooking> findItemsByUser(long userId, int from, int size) {
         if (from < 0) {
-            throw new BookingBadRequestException("Bad request");
+            throw new ItemBadRequestException("Bad request");
         }
         Pageable pageable = PageRequest.of(from / size, size);
         List<ItemDtoBooking> itemDtoList = itemRepository.findByOwner(userId, pageable).stream()
@@ -156,10 +155,10 @@ public class ItemServiceImpl implements ItemService {
         List<ItemDto> itemDtoList = new ArrayList<>();
         if (!text.isBlank()) {
             if (from < 0) {
-                throw new BookingBadRequestException("Bad request");
+                throw new ItemBadRequestException("Bad request");
             }
             Pageable pageable = PageRequest.of(from / size, size);
-            itemDtoList = itemRepository.findByNameOrDescriptionContainingIgnoreCase(text,
+            itemDtoList = itemRepository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(text,
                             text,
                             pageable)
                     .stream()

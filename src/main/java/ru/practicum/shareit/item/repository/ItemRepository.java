@@ -13,7 +13,9 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     List<Item> findByOwner(Long owner, Pageable pageable);
 
-    List<Item> findByNameOrDescriptionContainingIgnoreCase(String query1, String query2, Pageable pageable);
+    List<Item> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(String query1,
+                                                                               String query2,
+                                                                               Pageable pageable);
 
     @Query("SELECT i FROM Item AS i " +
             "join i.request as r " +
