@@ -1,4 +1,4 @@
-package ru.practicum.shareit;
+package ru.practicum.shareit.unitTest;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -399,5 +399,45 @@ public class BookingServiceTest {
         BookingDtoResponse booking = list.get(0);
 
         Assertions.assertEquals(1, booking.getId());
+    }
+
+    @Test
+    void getUsersBookingWithoutUserTest() {
+        Mockito
+                .when(userRepository.findById(Mockito.anyLong()))
+                .thenReturn(Optional.empty());
+
+        Assertions.assertThrows(NotFoundException.class,
+                () -> bookingService.getUsersBooking("ALL", 1, 0, 10));
+    }
+
+    @Test
+    void getOwnerBookingWithoutUserTest() {
+        Mockito
+                .when(userRepository.findById(Mockito.anyLong()))
+                .thenReturn(Optional.empty());
+
+        Assertions.assertThrows(NotFoundException.class,
+                () -> bookingService.getOwnerBooking("ALL", 1, 0, 10));
+    }
+
+    @Test
+    void getUsersBookingBadRequest() {
+        Mockito
+                .when(userRepository.findById(Mockito.anyLong()))
+                .thenReturn(Optional.of(new User()));
+
+        Assertions.assertThrows(BookingBadRequestException.class,
+                () -> bookingService.getUsersBooking("ALL", 1, -1, 10));
+    }
+
+    @Test
+    void getOwnerBookingBadRequest() {
+        Mockito
+                .when(userRepository.findById(Mockito.anyLong()))
+                .thenReturn(Optional.of(new User()));
+
+        Assertions.assertThrows(BookingBadRequestException.class,
+                () -> bookingService.getOwnerBooking("ALL", 1, -1, 10));
     }
 }
