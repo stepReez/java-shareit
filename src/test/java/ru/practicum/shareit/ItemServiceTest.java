@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.comment.dto.CommentDto;
@@ -15,6 +16,7 @@ import ru.practicum.shareit.comment.repository.CommentRepository;
 import ru.practicum.shareit.exception.ItemBadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemDtoBooking;
 import ru.practicum.shareit.item.dto.ItemDtoCreate;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -215,5 +217,63 @@ public class ItemServiceTest {
         Assertions.assertEquals("qwe", commentDto.getText());
         Assertions.assertEquals(56, commentDto.getItemId());
         Assertions.assertEquals("Max", commentDto.getAuthorName());
+    }
+
+    @Test
+    void findItemTest() {
+        Item item = Item.builder()
+                .id(1)
+                .name("name")
+                .description("description")
+                .available(true)
+                .owner(1)
+                .build();
+
+        Mockito
+                .when(itemRepository.findById(Mockito.anyLong()))
+                .thenReturn(Optional.of(item));
+
+        Mockito
+                .when(bookingRepository.getLastBookingByItemId(Mockito.anyLong(), Mockito.any()))
+                .thenReturn(List.of(Booking.builder()
+                        .id(1)
+                        .item(item)
+                        .booker(User.builder().id(2).build())
+                        .build()));
+
+        Mockito
+                .when(bookingRepository.getNextBookingByItemId(Mockito.anyLong(), Mockito.any()))
+                .thenReturn(List.of(Booking.builder()
+                        .id(2)
+                        .item(item)
+                        .booker(User.builder().id(2).build())
+                        .build()));
+
+        Mockito
+                .when(commentRepository.findByItemId(Mockito.anyLong()))
+                .thenReturn(List.of());
+
+        ItemDtoBooking itemDtoBooking =  itemService.findItem(1, 1);
+
+        ItemDtoBooking itemDtoBookingExpected = ItemDtoBooking.builder()
+                .id(1)
+                .name("name")
+                .description("description")
+                .available(true)
+                .owner(1)
+                .lastBooking(BookingDto.builder().id(1).build())
+                .nextBooking(BookingDto.builder().id(2).build())
+                .comments(List.of())
+                .build();
+
+        Assertions.assertEquals(itemDtoBookingExpected.getId(), itemDtoBooking.getId());
+        Assertions.assertEquals(itemDtoBookingExpected.getName(), itemDtoBooking.getName());
+        Assertions.assertEquals(itemDtoBookingExpected.getDescription(), itemDtoBooking.getDescription());
+        Assertions.assertEquals(itemDtoBookingExpected.getAvailable(), itemDtoBooking.getAvailable());
+        Assertions.assertEquals(itemDtoBookingExpected.getOwner(), itemDtoBooking.getOwner());
+        Assertions.assertEquals(itemDtoBookingExpected.getLastBooking().getId(),
+                itemDtoBooking.getLastBooking().getId());
+        Assertions.assertEquals(itemDtoBookingExpected.getNextBooking().getId(),
+                itemDtoBooking.getNextBooking().getId());
     }
 }
