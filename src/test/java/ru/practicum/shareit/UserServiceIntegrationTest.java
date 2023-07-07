@@ -8,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.service.UserServiceImpl;
 
+import java.util.List;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
@@ -66,5 +68,37 @@ public class UserServiceIntegrationTest {
         assertThat(user.getId(), notNullValue());
         assertThat(user.getName(), equalTo(userDto.getName()));
         assertThat(user.getEmail(), equalTo(userDto.getEmail()));
+    }
+
+    @Test
+    public void getUsersTest() {
+        UserDto userDto = UserDto.builder()
+                .name("Max")
+                .email("qwe@qwe.com")
+                .build();
+
+        UserDto userDto1 = UserDto.builder()
+                .name("Not Max")
+                .email("q@q.q")
+                .build();
+
+        userService.createUser(userDto);
+        userService.createUser(userDto1);
+
+        List<UserDto> users = userService.getUsers();
+
+        assertThat(users.size(), equalTo(2));
+    }
+
+    @Test
+    void deleteUserTest() {
+        UserDto userDto = UserDto.builder()
+                .name("Max")
+                .email("qwe@qwe.com")
+                .build();
+
+        UserDto userDto1 = userService.createUser(userDto);
+
+        userService.deleteUser(userDto1.getId());
     }
 }

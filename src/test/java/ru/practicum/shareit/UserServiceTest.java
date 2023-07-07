@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.shareit.exception.EmailException;
+import ru.practicum.shareit.exception.EmailNullException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
@@ -176,5 +177,14 @@ public class UserServiceTest {
                 .build();
 
         Assertions.assertThrows(EmailException.class, () -> userService.updateUser(userDto, 1));
+    }
+
+    @Test
+    void createUserWithoutEmail() {
+        UserDto userDto = UserDto.builder()
+                .name("Max")
+                .build();
+
+        Assertions.assertThrows(EmailNullException.class, () -> userService.createUser(userDto));
     }
 }

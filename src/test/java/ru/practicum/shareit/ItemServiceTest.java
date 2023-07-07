@@ -10,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.comment.dto.CommentDto;
+import ru.practicum.shareit.comment.model.Comment;
 import ru.practicum.shareit.comment.repository.CommentRepository;
 import ru.practicum.shareit.exception.ItemBadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -174,5 +175,45 @@ public class ItemServiceTest {
 
         Assertions.assertThrows(ItemBadRequestException.class,
                 () -> itemService.createComment(commentDto, 1, 1));
+    }
+
+    @Test
+    void createCommentTest() {
+        Mockito
+                .when(bookingRepository.getBookingByItemAndUser(Mockito.anyLong(), Mockito.anyLong()))
+                .thenReturn(List.of(new Booking()));
+
+        Mockito.when(userRepository.findById(Mockito.anyLong()))
+                .thenReturn(Optional.of(User.builder().name("Max").build()));
+
+        Mockito.when(itemRepository.findById(Mockito.anyLong()))
+                .thenReturn(Optional.of(Item.builder().id(56).build()));
+
+        Comment comment = Comment.builder()
+                .id(1)
+                .text("qwe")
+                .item(Item.builder().id(56).build())
+                .author(User.builder().name("Max").build())
+                .created(LocalDateTime.now().plusDays(1))
+                .build();
+
+        Mockito
+                .when(commentRepository.save(Mockito.any()))
+                .thenReturn(comment);
+
+        CommentDto commentDto = CommentDto.builder()
+                .id(1)
+                .text("qwe")
+                .itemId(56)
+                .authorName("Max")
+                .created(LocalDateTime.now().plusDays(1))
+                .build();
+
+        CommentDto commentDto1 = itemService.createComment(commentDto, 56, 1);
+
+        Assertions.assertEquals(1, commentDto.getId());
+        Assertions.assertEquals("qwe", commentDto.getText());
+        Assertions.assertEquals(56, commentDto.getItemId());
+        Assertions.assertEquals("Max", commentDto.getAuthorName());
     }
 }
