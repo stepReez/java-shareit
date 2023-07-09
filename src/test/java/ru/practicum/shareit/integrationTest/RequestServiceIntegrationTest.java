@@ -38,6 +38,7 @@ public class RequestServiceIntegrationTest {
     private UserDto userDto1;
 
     private ItemRequestDto itemRequestDto;
+
     @BeforeEach
     public void init() {
         userDto1 = userService.createUser(userDto);
