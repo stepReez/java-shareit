@@ -23,4 +23,6 @@ public class ItemDtoCreate {
 
     @NotNull(message = "Item can't be unavailable")
     private Boolean available;
+
+    private long requestId;
 }

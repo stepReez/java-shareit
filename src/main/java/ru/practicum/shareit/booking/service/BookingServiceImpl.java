@@ -1,8 +1,9 @@
 package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDto;
@@ -24,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -34,8 +36,6 @@ public class BookingServiceImpl implements BookingService {
     private final ItemRepository itemRepository;
 
     private final UserRepository userRepository;
-
-    private final Logger log = LoggerFactory.getLogger(BookingServiceImpl.class);
 
     @Override
     public BookingDtoResponse createBooking(BookingDto bookingDto, long userId) {
@@ -92,29 +92,33 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDtoResponse> getUsersBooking(String state, long userId) {
+    public List<BookingDtoResponse> getUsersBooking(String state, long userId, int from, int size) {
         if (userRepository.findById(userId).isEmpty()) {
             throw new NotFoundException(String.format("User with id = %d not found", userId));
         }
         List<Booking> bookingList;
+        if (from < 0) {
+            throw new BookingBadRequestException("Bad request");
+        }
+        Pageable pageable = PageRequest.of(from / size, size);
         switch (state) {
             case "ALL":
-                bookingList = bookingRepository.findByBookerIdOrderByStartDesc(userId);
+                bookingList = bookingRepository.findByBookerIdOrderByStartDesc(userId, pageable);
                 break;
             case "CURRENT":
-                bookingList = bookingRepository.findCurrentByBooker(userId, LocalDateTime.now());
+                bookingList = bookingRepository.findCurrentByBooker(userId, LocalDateTime.now(), pageable);
                 break;
             case "PAST":
-                bookingList = bookingRepository.findPastByBooker(userId, LocalDateTime.now());
+                bookingList = bookingRepository.findPastByBooker(userId, LocalDateTime.now(), pageable);
                 break;
             case "FUTURE":
-                bookingList = bookingRepository.findFutureByBooker(userId, LocalDateTime.now());
+                bookingList = bookingRepository.findFutureByBooker(userId, LocalDateTime.now(), pageable);
                 break;
             case "WAITING":
-                bookingList =  bookingRepository.findByStateWaitingByBooker(userId);
+                bookingList =  bookingRepository.findByStateWaitingByBooker(userId, pageable);
                 break;
             case "REJECTED":
-                bookingList = bookingRepository.findByStateRejectedByBooker(userId);
+                bookingList = bookingRepository.findByStateRejectedByBooker(userId, pageable);
                 break;
             default :
                 throw new UnknownStateException("Unknown state: " + state);
@@ -126,27 +130,31 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDtoResponse> getOwnerBooking(String state, long userId) {
+    public List<BookingDtoResponse> getOwnerBooking(String state, long userId, int from, int size) {
         if (userRepository.findById(userId).isEmpty()) {
             throw new NotFoundException(String.format("User with id = %d not found", userId));
         }
         List<Booking> bookingList;
+        if (from < 0) {
+            throw new BookingBadRequestException("Bad request");
+        }
+        Pageable pageable = PageRequest.of(from / size, size);
         switch (state) {
             case "ALL":
-                bookingList = bookingRepository.findAllByOwner(userId);
+                bookingList = bookingRepository.findAllByOwner(userId, pageable);
                 break;
             case "CURRENT":
-                bookingList =  bookingRepository.findCurrentByOwner(userId, LocalDateTime.now());
+                bookingList =  bookingRepository.findCurrentByOwner(userId, LocalDateTime.now(), pageable);
                 break;
             case "PAST":
-                bookingList = bookingRepository.findPastByOwner(userId, LocalDateTime.now());
+                bookingList = bookingRepository.findPastByOwner(userId, LocalDateTime.now(), pageable);
                 break;
             case "FUTURE":
-                bookingList = bookingRepository.findFutureByOwner(userId, LocalDateTime.now());
+                bookingList = bookingRepository.findFutureByOwner(userId, LocalDateTime.now(), pageable);
                 break;
             case "WAITING":
             case "REJECTED":
-                bookingList = bookingRepository.findStateByOwner(userId, state);
+                bookingList = bookingRepository.findStateByOwner(userId, state, pageable);
                 break;
             default :
                 throw new UnknownStateException("Unknown state: " + state);
