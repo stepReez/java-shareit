@@ -2,7 +2,6 @@ package ru.practicum.shareit.controllerTest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -14,6 +13,9 @@ import ru.practicum.shareit.user.service.UserServiceImpl;
 
 import java.nio.charset.StandardCharsets;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -23,15 +25,15 @@ import static org.hamcrest.Matchers.is;
 public class UserControllerTest {
 
     @Autowired
-    ObjectMapper mapper;
+    private ObjectMapper mapper;
 
     @MockBean
-    UserServiceImpl userService;
+    private UserServiceImpl userService;
 
     @Autowired
     private MockMvc mvc;
 
-    private UserDto userDto = UserDto.builder()
+    private final UserDto userDto = UserDto.builder()
             .id(1)
             .name("Max")
             .email("qwe@qwe.com")
@@ -39,8 +41,7 @@ public class UserControllerTest {
 
     @Test
     void createUserTest() throws Exception {
-        Mockito
-                .when(userService.createUser(Mockito.any()))
+        when(userService.createUser(any()))
                 .thenReturn(userDto);
 
         mvc.perform(post("/users")
@@ -56,8 +57,7 @@ public class UserControllerTest {
 
     @Test
     void updateUserTest() throws Exception {
-        Mockito
-                .when(userService.updateUser(Mockito.any(), Mockito.anyLong()))
+        when(userService.updateUser(any(), anyLong()))
                 .thenReturn(userDto);
 
         mvc.perform(patch("/users/1")
@@ -73,8 +73,7 @@ public class UserControllerTest {
 
     @Test
     void findUserTest() throws Exception {
-        Mockito
-                .when(userService.findUser(Mockito.anyLong()))
+        when(userService.findUser(anyLong()))
                 .thenReturn(userDto);
 
         mvc.perform(get("/users/1")

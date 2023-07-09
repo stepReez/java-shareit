@@ -2,7 +2,6 @@ package ru.practicum.shareit.controllerTest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -21,23 +20,29 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static ru.practicum.shareit.util.Headers.X_SHARER_USER_ID;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyLong;
 
 @WebMvcTest(controllers = BookingController.class)
 public class BookingControllerTest {
 
     @Autowired
-    ObjectMapper mapper;
+    private ObjectMapper mapper;
 
     @MockBean
-    BookingService bookingService;
+    private BookingService bookingService;
 
     @Autowired
     private MockMvc mvc;
 
-    BookingDto bookingDto = BookingDto.builder()
+    private final BookingDto bookingDto = BookingDto.builder()
             .id(1)
             .start(LocalDateTime.now().plusDays(1))
             .end(LocalDateTime.now().plusDays(2))
@@ -46,7 +51,7 @@ public class BookingControllerTest {
             .status(BookingStatus.WAITING)
             .build();
 
-    BookingDtoResponse bookingDtoResponse = BookingDtoResponse.builder()
+    private final BookingDtoResponse bookingDtoResponse = BookingDtoResponse.builder()
             .id(1)
             .start(LocalDateTime.now().plusDays(1))
             .end(LocalDateTime.now().plusDays(2))
@@ -57,13 +62,12 @@ public class BookingControllerTest {
 
     @Test
     void createBookingTest() throws Exception {
-        Mockito
-                .when(bookingService.createBooking(Mockito.any(), Mockito.anyLong()))
+        when(bookingService.createBooking(any(), anyLong()))
                 .thenReturn(bookingDtoResponse);
 
         mvc.perform(post("/bookings")
                         .content(mapper.writeValueAsString(bookingDto))
-                        .header("X-Sharer-User-Id", 1)
+                        .header(X_SHARER_USER_ID, 1)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -73,12 +77,11 @@ public class BookingControllerTest {
 
     @Test
     void patchBookingTest() throws Exception {
-        Mockito
-                .when(bookingService.patchBooking(Mockito.anyLong(), Mockito.anyBoolean(), Mockito.anyLong()))
+        when(bookingService.patchBooking(anyLong(), anyBoolean(), anyLong()))
                 .thenReturn(bookingDtoResponse);
 
         mvc.perform(patch("/bookings/1?approved=true")
-                        .header("X-Sharer-User-Id", 1)
+                        .header(X_SHARER_USER_ID, 1)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -88,12 +91,11 @@ public class BookingControllerTest {
 
     @Test
     void getBookingTest() throws Exception {
-        Mockito
-                .when(bookingService.getBooking(Mockito.anyLong(), Mockito.anyLong()))
+        when(bookingService.getBooking(anyLong(), anyLong()))
                 .thenReturn(bookingDtoResponse);
 
         mvc.perform(get("/bookings/1")
-                        .header("X-Sharer-User-Id", 1)
+                        .header(X_SHARER_USER_ID, 1)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -103,15 +105,14 @@ public class BookingControllerTest {
 
     @Test
     void getUsersBooking() throws Exception {
-        Mockito
-                .when(bookingService.getUsersBooking(Mockito.any(),
-                        Mockito.anyLong(),
-                        Mockito.anyInt(),
-                        Mockito.anyInt()))
+        when(bookingService.getUsersBooking(any(),
+                        anyLong(),
+                        anyInt(),
+                        anyInt()))
                 .thenReturn(List.of(bookingDtoResponse));
 
         mvc.perform(get("/bookings")
-                        .header("X-Sharer-User-Id", 1)
+                        .header(X_SHARER_USER_ID, 1)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -120,15 +121,14 @@ public class BookingControllerTest {
 
     @Test
     void getOwnerBooking() throws Exception {
-        Mockito
-                .when(bookingService.getUsersBooking(Mockito.any(),
-                        Mockito.anyLong(),
-                        Mockito.anyInt(),
-                        Mockito.anyInt()))
+        when(bookingService.getUsersBooking(any(),
+                        anyLong(),
+                        anyInt(),
+                        anyInt()))
                 .thenReturn(List.of(bookingDtoResponse));
 
         mvc.perform(get("/bookings/owner")
-                        .header("X-Sharer-User-Id", 1)
+                        .header(X_SHARER_USER_ID, 1)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))

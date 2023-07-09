@@ -1,6 +1,7 @@
 package ru.practicum.shareit.integrationTest;
 
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,47 +25,39 @@ import static org.hamcrest.Matchers.notNullValue;
 public class RequestServiceIntegrationTest {
 
     @Autowired
-    UserServiceImpl userService;
+    private UserServiceImpl userService;
 
     @Autowired
-    RequestServiceImpl requestService;
+    private RequestServiceImpl requestService;
 
-    @Test
-    public void createRequestTest() {
-        UserDto userDto = UserDto.builder()
-                .name("Max")
-                .email("qwe@qwe.com")
-                .build();
+    private final UserDto userDto = UserDto.builder()
+            .name("Max")
+            .email("qwe@qwe.com")
+            .build();
 
-        UserDto userDto1 = userService.createUser(userDto);
+    private UserDto userDto1;
 
-        ItemRequestDto itemRequestDto = ItemRequestDto.builder()
+    private ItemRequestDto itemRequestDto;
+    @BeforeEach
+    public void init() {
+        userDto1 = userService.createUser(userDto);
+
+        itemRequestDto = ItemRequestDto.builder()
                 .description("description")
                 .requesterId(userDto.getId())
                 .build();
+    }
 
+    @Test
+    public void createRequestTest() {
         ItemRequestDto itemRequestDto1 = requestService.createRequest(itemRequestDto, userDto1.getId());
 
-        assertThat(itemRequestDto1.getId(), notNullValue());
-        assertThat(itemRequestDto1.getRequesterId(), equalTo(userDto1.getId()));
-        assertThat(itemRequestDto1.getDescription(), equalTo(itemRequestDto.getDescription()));
+        test(itemRequestDto1);
     }
 
     @Test
     public void getUserRequestsTest() {
-        UserDto userDto = UserDto.builder()
-                .name("Max")
-                .email("qwe@qwe.com")
-                .build();
-
-        UserDto userDto1 = userService.createUser(userDto);
-
-        ItemRequestDto itemRequestDto = ItemRequestDto.builder()
-                .description("description")
-                .requesterId(userDto.getId())
-                .build();
-
-        ItemRequestDto itemRequestDto1 = requestService.createRequest(itemRequestDto, userDto1.getId());
+        requestService.createRequest(itemRequestDto, userDto1.getId());
 
         List<ItemRequestDto> requests = requestService.getUserRequests(userDto1.getId());
 
@@ -73,19 +66,7 @@ public class RequestServiceIntegrationTest {
 
     @Test
     public void getOtherUsersRequestsTest() {
-        UserDto userDto = UserDto.builder()
-                .name("Max")
-                .email("qwe@qwe.com")
-                .build();
-
-        UserDto userDto1 = userService.createUser(userDto);
-
-        ItemRequestDto itemRequestDto = ItemRequestDto.builder()
-                .description("description")
-                .requesterId(userDto.getId())
-                .build();
-
-        ItemRequestDto itemRequestDto1 = requestService.createRequest(itemRequestDto, userDto1.getId());
+        requestService.createRequest(itemRequestDto, userDto1.getId());
 
         List<ItemRequestDto> requests = requestService.getOtherUsersRequests(userDto1.getId(), 0, 10);
 
@@ -94,24 +75,16 @@ public class RequestServiceIntegrationTest {
 
     @Test
     public void getOneRequestTest() {
-        UserDto userDto = UserDto.builder()
-                .name("Max")
-                .email("qwe@qwe.com")
-                .build();
-
-        UserDto userDto1 = userService.createUser(userDto);
-
-        ItemRequestDto itemRequestDto = ItemRequestDto.builder()
-                .description("description")
-                .requesterId(userDto.getId())
-                .build();
-
         ItemRequestDto itemRequestDtoWithId = requestService.createRequest(itemRequestDto, userDto1.getId());
 
         ItemRequestDto itemRequestDto1 = requestService.getOneRequest(itemRequestDtoWithId.getId(), userDto1.getId());
 
-                assertThat(itemRequestDto1.getId(), notNullValue());
-        assertThat(itemRequestDto1.getRequesterId(), equalTo(userDto1.getId()));
-        assertThat(itemRequestDto1.getDescription(), equalTo(itemRequestDto.getDescription()));
+        test(itemRequestDto1);
+    }
+
+    private void test(ItemRequestDto itemRequestDtoTest) {
+        assertThat(itemRequestDtoTest.getId(), notNullValue());
+        assertThat(itemRequestDtoTest.getRequesterId(), equalTo(userDto1.getId()));
+        assertThat(itemRequestDtoTest.getDescription(), equalTo(itemRequestDto.getDescription()));
     }
 }

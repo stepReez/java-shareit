@@ -1,6 +1,7 @@
 package ru.practicum.shareit.integrationTest;
 
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,80 +27,52 @@ import static org.hamcrest.Matchers.notNullValue;
 public class ItemServiceIntegrationTest {
 
     @Autowired
-    ItemServiceImpl itemService;
+    private ItemServiceImpl itemService;
 
     @Autowired
-    UserServiceImpl userService;
+    private UserServiceImpl userService;
+
+    private final UserDto userDto = UserDto.builder()
+            .name("Max")
+            .email("qwe@qwe.com")
+            .build();
+
+    private final ItemDtoCreate itemDtoCreate = ItemDtoCreate.builder()
+            .name("ItemName")
+            .description("Description")
+            .available(true)
+            .build();
+
+    private UserDto userDto1;
+
+    private ItemDto itemDto;
+
+    @BeforeEach
+    public void init() {
+        userDto1 = userService.createUser(userDto);
+
+        itemDto = itemService.createItem(itemDtoCreate, userDto1.getId());
+    }
 
     @Test
     public void createItemTest() {
-        UserDto userDto = UserDto.builder()
-                .name("Max")
-                .email("qwe@qwe.com")
-                .build();
-
-        UserDto userDto1 = userService.createUser(userDto);
-
-        ItemDtoCreate itemDtoCreate = ItemDtoCreate.builder()
-                .name("ItemName")
-                .description("Description")
-                .available(true)
-                .build();
-
-        ItemDto itemDto = itemService.createItem(itemDtoCreate, userDto1.getId());
-
-        assertThat(itemDto.getId(), notNullValue());
+        test(itemDto);
         assertThat(itemDto.getName(), equalTo(itemDtoCreate.getName()));
-        assertThat(itemDto.getDescription(), equalTo(itemDtoCreate.getDescription()));
-        assertThat(itemDto.getAvailable(), equalTo(itemDtoCreate.getAvailable()));
     }
 
     @Test
     public void patchItemTest() {
-        UserDto userDto = UserDto.builder()
-                .name("Max")
-                .email("qwe@qwe.com")
-                .build();
-
-        UserDto userDto1 = userService.createUser(userDto);
-
-        ItemDtoCreate itemDtoCreate = ItemDtoCreate.builder()
-                .name("ItemName")
-                .description("Description")
-                .available(true)
-                .build();
-
-        ItemDto itemDto1 = itemService.createItem(itemDtoCreate, userDto1.getId());
-
         ItemDto itemDtoPatch = ItemDto.builder()
                 .name("newName")
                 .build();
 
-        ItemDto itemDto = itemService.patchItem(itemDtoPatch, itemDto1.getId(), userDto1.getId());
-
-        assertThat(itemDto.getName(), equalTo(itemDtoPatch.getName()));
-        assertThat(itemDto.getId(), notNullValue());
-        assertThat(itemDto.getDescription(), equalTo(itemDtoCreate.getDescription()));
-        assertThat(itemDto.getAvailable(), equalTo(itemDtoCreate.getAvailable()));
+        ItemDto itemDto1 = itemService.patchItem(itemDtoPatch, itemDto.getId(), userDto1.getId());
+        test(itemDto1);
+        assertThat(itemDto1.getName(), equalTo(itemDtoPatch.getName()));
     }
 
     @Test
     public void findByUserTest() {
-        UserDto userDto = UserDto.builder()
-                .name("Max")
-                .email("qwe@qwe.com")
-                .build();
-
-        UserDto userDto1 = userService.createUser(userDto);
-
-        ItemDtoCreate itemDtoCreate = ItemDtoCreate.builder()
-                .name("ItemName")
-                .description("Description")
-                .available(true)
-                .build();
-
-        itemService.createItem(itemDtoCreate, userDto1.getId());
-
         ItemDtoCreate itemDtoCreate1 = ItemDtoCreate.builder()
                 .name("ItemName2")
                 .description("Description2")
@@ -115,21 +88,6 @@ public class ItemServiceIntegrationTest {
 
     @Test
     public void searchItem() {
-        UserDto userDto = UserDto.builder()
-                .name("Max")
-                .email("qwe@qwe.com")
-                .build();
-
-        UserDto userDto1 = userService.createUser(userDto);
-
-        ItemDtoCreate itemDtoCreate = ItemDtoCreate.builder()
-                .name("ItemName")
-                .description("Description")
-                .available(true)
-                .build();
-
-        itemService.createItem(itemDtoCreate, userDto1.getId());
-
         ItemDtoCreate itemDtoCreate1 = ItemDtoCreate.builder()
                 .name("Desc")
                 .description("Text")
@@ -141,5 +99,11 @@ public class ItemServiceIntegrationTest {
         List<ItemDto> items = itemService.searchItem("es", 0, 10);
 
         assertThat(items.size(), equalTo(2));
+    }
+
+    private void test(ItemDto itemDto) {
+        assertThat(itemDto.getId(), notNullValue());
+        assertThat(itemDto.getDescription(), equalTo(itemDtoCreate.getDescription()));
+        assertThat(itemDto.getAvailable(), equalTo(itemDtoCreate.getAvailable()));
     }
 }

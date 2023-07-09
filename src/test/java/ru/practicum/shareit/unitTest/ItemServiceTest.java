@@ -1,11 +1,11 @@
 package ru.practicum.shareit.unitTest;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.Booking;
@@ -29,25 +29,31 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.when;
+
 @ExtendWith(MockitoExtension.class)
 public class ItemServiceTest {
 
     @Mock
-    ItemRepository itemRepository;
+    private ItemRepository itemRepository;
 
     @Mock
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Mock
-    BookingRepository bookingRepository;
+    private BookingRepository bookingRepository;
 
     @Mock
-    CommentRepository commentRepository;
+    private CommentRepository commentRepository;
 
     @Mock
-    RequestRepository requestRepository;
+    private RequestRepository requestRepository;
 
-    ItemServiceImpl itemService;
+    private ItemServiceImpl itemService;
 
     @BeforeEach
     public void init() {
@@ -58,222 +64,224 @@ public class ItemServiceTest {
                 requestRepository);
     }
 
-    @Test
-    public void createItemTest() {
-        Mockito
-                .when(userRepository.findById(Mockito.anyLong()))
-                .thenReturn(Optional.of(User.builder()
-                        .id(1)
-                        .name("Alex")
-                        .email("qwe@qwe.com")
-                        .build()));
+    @Nested
+    @DisplayName("Create Tests")
+    class CreateTest {
+        @Test
+        public void createItemTest() {
+            when(userRepository.findById(anyLong()))
+                    .thenReturn(Optional.of(User.builder()
+                            .id(1)
+                            .name("Alex")
+                            .email("qwe@qwe.com")
+                            .build()));
 
-        Mockito
-                .when(itemRepository.save(Mockito.any(Item.class)))
-                .thenReturn(Item.builder()
-                        .id(1)
-                        .name("ItemName")
-                        .description("Description")
-                        .available(true)
-                        .owner(1)
-                        .build());
+            when(itemRepository.save(any()))
+                    .thenReturn(Item.builder()
+                            .id(1)
+                            .name("ItemName")
+                            .description("Description")
+                            .available(true)
+                            .owner(1)
+                            .build());
 
-        ItemDtoCreate itemDtoCreate = ItemDtoCreate.builder()
-                .name("ItemName")
-                .description("Description")
-                .available(true)
-                .build();
+            ItemDtoCreate itemDtoCreate = ItemDtoCreate.builder()
+                    .name("ItemName")
+                    .description("Description")
+                    .available(true)
+                    .build();
 
-        ItemDto itemDto = itemService.createItem(itemDtoCreate, 1);
+            ItemDto itemDto = itemService.createItem(itemDtoCreate, 1);
 
-        Assertions.assertEquals(1, itemDto.getId());
-        Assertions.assertEquals(1, itemDto.getOwner());
-        Assertions.assertEquals("ItemName", itemDto.getName());
-        Assertions.assertEquals("Description", itemDto.getDescription());
-        Assertions.assertEquals(true, itemDto.getAvailable());
+            assertEquals(1, itemDto.getId());
+            assertEquals(1, itemDto.getOwner());
+            assertEquals("ItemName", itemDto.getName());
+            assertEquals("Description", itemDto.getDescription());
+            assertEquals(true, itemDto.getAvailable());
+        }
+
+        @Test
+        void createCommentTest() {
+            when(bookingRepository.getBookingByItemAndUser(anyLong(), anyLong()))
+                    .thenReturn(List.of(new Booking()));
+
+            when(userRepository.findById(anyLong()))
+                    .thenReturn(Optional.of(User.builder().name("Max").build()));
+
+            when(itemRepository.findById(anyLong()))
+                    .thenReturn(Optional.of(Item.builder().id(56).build()));
+
+            Comment comment = Comment.builder()
+                    .id(1)
+                    .text("qwe")
+                    .item(Item.builder().id(56).build())
+                    .author(User.builder().name("Max").build())
+                    .created(LocalDateTime.now().plusDays(1))
+                    .build();
+
+            when(commentRepository.save(any()))
+                    .thenReturn(comment);
+
+            CommentDto commentDto = CommentDto.builder()
+                    .id(1)
+                    .text("qwe")
+                    .itemId(56)
+                    .authorName("Max")
+                    .created(LocalDateTime.now().plusDays(1))
+                    .build();
+
+            CommentDto commentDto1 = itemService.createComment(commentDto, 56, 1);
+
+            assertEquals(1, commentDto1.getId());
+            assertEquals("qwe", commentDto1.getText());
+            assertEquals(56, commentDto1.getItemId());
+            assertEquals("Max", commentDto1.getAuthorName());
+        }
+
+        @Test
+        public void createCommentUserWithNoBookTest() {
+            CommentDto commentDto = CommentDto.builder()
+                    .text("Not Blank Comment")
+                    .itemId(1)
+                    .authorName("Max")
+                    .created(LocalDateTime.now())
+                    .build();
+            assertThrows(ItemBadRequestException.class,
+                    () -> itemService.createComment(commentDto, 1, 1));
+        }
+
+        @Test
+        public void createCommentWithBlankText() {
+            CommentDto commentDto = CommentDto.builder()
+                    .text(" ")
+                    .itemId(1)
+                    .authorName("Max")
+                    .created(LocalDateTime.now())
+                    .build();
+
+            when(bookingRepository.getBookingByItemAndUser(anyLong(), anyLong()))
+                    .thenReturn(List.of(Booking.builder()
+                            .build()));
+
+            assertThrows(ItemBadRequestException.class,
+                    () -> itemService.createComment(commentDto, 1, 1));
+        }
+
+        @Test
+        public void itemCreateWithWrongUser() {
+            ItemDtoCreate itemDtoCreate = ItemDtoCreate.builder()
+                    .name("ItemName")
+                    .description("Description")
+                    .available(true)
+                    .build();
+
+            assertThrows(NotFoundException.class, () -> itemService.createItem(itemDtoCreate, 1));
+        }
     }
 
-    @Test
-    public void itemCreateWithWrongUser() {
-        ItemDtoCreate itemDtoCreate = ItemDtoCreate.builder()
-                .name("ItemName")
-                .description("Description")
-                .available(true)
-                .build();
+    @Nested
+    @DisplayName("Read Tests")
+    class ReadTest {
+        @Test
+        public void findNotExistingItemTest() {
+            assertThrows(NotFoundException.class, () -> itemService.findItem(1,1));
+        }
 
-        Assertions.assertThrows(NotFoundException.class, () -> itemService.createItem(itemDtoCreate, 1));
+        @Test
+        public void findItemsByUserWrongPageTest() {
+            assertThrows(ItemBadRequestException.class,
+                    () -> itemService.findItemsByUser(1, -1, 10));
+        }
+
+        @Test
+        public void searchItemWithWrongPageTest() {
+            assertThrows(ItemBadRequestException.class,
+                    () -> itemService.searchItem("123", -1, 10));
+        }
+
+        @Test
+        void findItemTest() {
+            Item item = Item.builder()
+                    .id(1)
+                    .name("name")
+                    .description("description")
+                    .available(true)
+                    .owner(1)
+                    .build();
+
+            when(itemRepository.findById(anyLong()))
+                    .thenReturn(Optional.of(item));
+
+            when(bookingRepository.getLastBookingByItemId(anyLong(), any()))
+                    .thenReturn(List.of(Booking.builder()
+                            .id(1)
+                            .item(item)
+                            .booker(User.builder().id(2).build())
+                            .build()));
+
+            when(bookingRepository.getNextBookingByItemId(anyLong(), any()))
+                    .thenReturn(List.of(Booking.builder()
+                            .id(2)
+                            .item(item)
+                            .booker(User.builder().id(2).build())
+                            .build()));
+
+            when(commentRepository.findByItemId(anyLong()))
+                    .thenReturn(List.of());
+
+            ItemDtoBooking itemDtoBooking =  itemService.findItem(1, 1);
+
+            ItemDtoBooking itemDtoBookingExpected = ItemDtoBooking.builder()
+                    .id(1)
+                    .name("name")
+                    .description("description")
+                    .available(true)
+                    .owner(1)
+                    .lastBooking(BookingDto.builder().id(1).build())
+                    .nextBooking(BookingDto.builder().id(2).build())
+                    .comments(List.of())
+                    .build();
+
+            assertEquals(itemDtoBookingExpected.getId(), itemDtoBooking.getId());
+            assertEquals(itemDtoBookingExpected.getName(), itemDtoBooking.getName());
+            assertEquals(itemDtoBookingExpected.getDescription(), itemDtoBooking.getDescription());
+            assertEquals(itemDtoBookingExpected.getAvailable(), itemDtoBooking.getAvailable());
+            assertEquals(itemDtoBookingExpected.getOwner(), itemDtoBooking.getOwner());
+            assertEquals(itemDtoBookingExpected.getLastBooking().getId(),
+                    itemDtoBooking.getLastBooking().getId());
+            assertEquals(itemDtoBookingExpected.getNextBooking().getId(),
+                    itemDtoBooking.getNextBooking().getId());
+        }
     }
 
-    @Test
-    public void itemUpdateNotFoundTest() {
-        ItemDto itemDto = ItemDto.builder()
-                .name("New Name")
-                .build();
+    @Nested
+    @DisplayName("Update test")
+    class UpdateTest {
+        @Test
+        public void itemUpdateNotFoundTest() {
+            ItemDto itemDto = ItemDto.builder()
+                    .name("New Name")
+                    .build();
 
-        Assertions.assertThrows(NotFoundException.class, () -> itemService.patchItem(itemDto, 1, 2));
-    }
+            assertThrows(NotFoundException.class, () -> itemService.patchItem(itemDto, 1, 2));
+        }
 
-    @Test
-    public void itemUpdateWithWrongUserTest() {
-        Mockito
-                .when(itemRepository.findById(Mockito.anyLong()))
-                .thenReturn(Optional.of(Item.builder()
-                        .id(1)
-                        .name("ItemName")
-                        .description("Description")
-                        .available(true)
-                        .owner(1)
-                        .build()));
+        @Test
+        public void itemUpdateWithWrongUserTest() {
+            when(itemRepository.findById(anyLong()))
+                    .thenReturn(Optional.of(Item.builder()
+                            .id(1)
+                            .name("ItemName")
+                            .description("Description")
+                            .available(true)
+                            .owner(1)
+                            .build()));
 
-        ItemDto itemDto = ItemDto.builder()
-                .name("New Name")
-                .build();
+            ItemDto itemDto = ItemDto.builder()
+                    .name("New Name")
+                    .build();
 
-        Assertions.assertThrows(NotFoundException.class, () -> itemService.patchItem(itemDto, 1, 2));
-    }
-
-    @Test
-    public void findNotExistingItemTest() {
-        Assertions.assertThrows(NotFoundException.class, () -> itemService.findItem(1,1));
-    }
-
-    @Test
-    public void findItemsByUserWrongPageTest() {
-        Assertions.assertThrows(ItemBadRequestException.class,
-                () -> itemService.findItemsByUser(1, -1, 10));
-    }
-
-    @Test
-    public void searchItemWithWrongPageTest() {
-        Assertions.assertThrows(ItemBadRequestException.class,
-                () -> itemService.searchItem("123", -1, 10));
-    }
-
-    @Test
-    public void createCommentUserWithNoBookTest() {
-        CommentDto commentDto = CommentDto.builder()
-                .text("Not Blank Comment")
-                .itemId(1)
-                .authorName("Max")
-                .created(LocalDateTime.now())
-                .build();
-        Assertions.assertThrows(ItemBadRequestException.class,
-                () -> itemService.createComment(commentDto, 1, 1));
-    }
-
-    @Test
-    public void createCommentWithBlankText() {
-        CommentDto commentDto = CommentDto.builder()
-                .text(" ")
-                .itemId(1)
-                .authorName("Max")
-                .created(LocalDateTime.now())
-                .build();
-
-        Mockito
-                .when(bookingRepository.getBookingByItemAndUser(Mockito.anyLong(), Mockito.anyLong()))
-                .thenReturn(List.of(Booking.builder()
-                        .build()));
-
-        Assertions.assertThrows(ItemBadRequestException.class,
-                () -> itemService.createComment(commentDto, 1, 1));
-    }
-
-    @Test
-    void createCommentTest() {
-        Mockito
-                .when(bookingRepository.getBookingByItemAndUser(Mockito.anyLong(), Mockito.anyLong()))
-                .thenReturn(List.of(new Booking()));
-
-        Mockito.when(userRepository.findById(Mockito.anyLong()))
-                .thenReturn(Optional.of(User.builder().name("Max").build()));
-
-        Mockito.when(itemRepository.findById(Mockito.anyLong()))
-                .thenReturn(Optional.of(Item.builder().id(56).build()));
-
-        Comment comment = Comment.builder()
-                .id(1)
-                .text("qwe")
-                .item(Item.builder().id(56).build())
-                .author(User.builder().name("Max").build())
-                .created(LocalDateTime.now().plusDays(1))
-                .build();
-
-        Mockito
-                .when(commentRepository.save(Mockito.any()))
-                .thenReturn(comment);
-
-        CommentDto commentDto = CommentDto.builder()
-                .id(1)
-                .text("qwe")
-                .itemId(56)
-                .authorName("Max")
-                .created(LocalDateTime.now().plusDays(1))
-                .build();
-
-        CommentDto commentDto1 = itemService.createComment(commentDto, 56, 1);
-
-        Assertions.assertEquals(1, commentDto.getId());
-        Assertions.assertEquals("qwe", commentDto.getText());
-        Assertions.assertEquals(56, commentDto.getItemId());
-        Assertions.assertEquals("Max", commentDto.getAuthorName());
-    }
-
-    @Test
-    void findItemTest() {
-        Item item = Item.builder()
-                .id(1)
-                .name("name")
-                .description("description")
-                .available(true)
-                .owner(1)
-                .build();
-
-        Mockito
-                .when(itemRepository.findById(Mockito.anyLong()))
-                .thenReturn(Optional.of(item));
-
-        Mockito
-                .when(bookingRepository.getLastBookingByItemId(Mockito.anyLong(), Mockito.any()))
-                .thenReturn(List.of(Booking.builder()
-                        .id(1)
-                        .item(item)
-                        .booker(User.builder().id(2).build())
-                        .build()));
-
-        Mockito
-                .when(bookingRepository.getNextBookingByItemId(Mockito.anyLong(), Mockito.any()))
-                .thenReturn(List.of(Booking.builder()
-                        .id(2)
-                        .item(item)
-                        .booker(User.builder().id(2).build())
-                        .build()));
-
-        Mockito
-                .when(commentRepository.findByItemId(Mockito.anyLong()))
-                .thenReturn(List.of());
-
-        ItemDtoBooking itemDtoBooking =  itemService.findItem(1, 1);
-
-        ItemDtoBooking itemDtoBookingExpected = ItemDtoBooking.builder()
-                .id(1)
-                .name("name")
-                .description("description")
-                .available(true)
-                .owner(1)
-                .lastBooking(BookingDto.builder().id(1).build())
-                .nextBooking(BookingDto.builder().id(2).build())
-                .comments(List.of())
-                .build();
-
-        Assertions.assertEquals(itemDtoBookingExpected.getId(), itemDtoBooking.getId());
-        Assertions.assertEquals(itemDtoBookingExpected.getName(), itemDtoBooking.getName());
-        Assertions.assertEquals(itemDtoBookingExpected.getDescription(), itemDtoBooking.getDescription());
-        Assertions.assertEquals(itemDtoBookingExpected.getAvailable(), itemDtoBooking.getAvailable());
-        Assertions.assertEquals(itemDtoBookingExpected.getOwner(), itemDtoBooking.getOwner());
-        Assertions.assertEquals(itemDtoBookingExpected.getLastBooking().getId(),
-                itemDtoBooking.getLastBooking().getId());
-        Assertions.assertEquals(itemDtoBookingExpected.getNextBooking().getId(),
-                itemDtoBooking.getNextBooking().getId());
+            assertThrows(NotFoundException.class, () -> itemService.patchItem(itemDto, 1, 2));
+        }
     }
 }

@@ -1,6 +1,7 @@
 package ru.practicum.shareit.integrationTest;
 
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,29 +29,35 @@ import static org.hamcrest.Matchers.equalTo;
 public class BookingServiceIntegrationTest {
 
     @Autowired
-    ItemServiceImpl itemService;
+    private ItemServiceImpl itemService;
 
     @Autowired
-    UserServiceImpl userService;
+    private UserServiceImpl userService;
 
     @Autowired
-    BookingServiceImpl bookingService;
+    private BookingServiceImpl bookingService;
 
-    @Test
-    public void createBookingTest() {
+    private BookingDto bookingDto;
+
+    private UserDto userDto1;
+
+    private UserDto userDtoBooker1;
+
+    @BeforeEach
+    public void init() {
         UserDto userDto = UserDto.builder()
                 .name("Max")
                 .email("qwe@qwe.com")
                 .build();
 
-        UserDto userDto1 = userService.createUser(userDto);
+        userDto1 = userService.createUser(userDto);
 
         UserDto userDtoBooker = UserDto.builder()
                 .name("Mr. Booker")
                 .email("unique@qwe.com")
                 .build();
 
-        UserDto userDtoBooker1 = userService.createUser(userDtoBooker);
+        userDtoBooker1 = userService.createUser(userDtoBooker);
 
         ItemDtoCreate itemDtoCreate = ItemDtoCreate.builder()
                 .name("ItemName")
@@ -60,52 +67,25 @@ public class BookingServiceIntegrationTest {
 
         ItemDto itemDto1 = itemService.createItem(itemDtoCreate, userDto1.getId());
 
-        BookingDto bookingDto = BookingDto.builder()
+        bookingDto = BookingDto.builder()
                 .start(LocalDateTime.now().plusDays(1))
                 .end(LocalDateTime.MAX)
                 .itemId(itemDto1.getId())
                 .bookerId(userDtoBooker1.getId())
                 .build();
+    }
+
+    @Test
+    public void createBookingTest() {
+
 
         BookingDtoResponse bookingDtoResponse = bookingService.createBooking(bookingDto, userDtoBooker1.getId());
 
-        assertThat(bookingDto.getStart(), equalTo(bookingDtoResponse.getStart()));
-        assertThat(bookingDto.getEnd(), equalTo(bookingDtoResponse.getEnd()));
-        assertThat(bookingDto.getItemId(), equalTo(bookingDtoResponse.getItem().getId()));
-        assertThat(bookingDto.getBookerId(), equalTo(bookingDtoResponse.getBooker().getId()));
+        test(bookingDtoResponse);
     }
 
     @Test
     public void patchBookingTest() {
-        UserDto userDto = UserDto.builder()
-                .name("Max")
-                .email("qwe@qwe.com")
-                .build();
-
-        UserDto userDto1 = userService.createUser(userDto);
-
-        UserDto userDtoBooker = UserDto.builder()
-                .name("Mr. Booker")
-                .email("unique@qwe.com")
-                .build();
-
-        UserDto userDtoBooker1 = userService.createUser(userDtoBooker);
-
-        ItemDtoCreate itemDtoCreate = ItemDtoCreate.builder()
-                .name("ItemName")
-                .description("Description")
-                .available(true)
-                .build();
-
-        ItemDto itemDto1 = itemService.createItem(itemDtoCreate, userDto1.getId());
-
-        BookingDto bookingDto = BookingDto.builder()
-                .start(LocalDateTime.now().plusDays(1))
-                .end(LocalDateTime.MAX)
-                .itemId(itemDto1.getId())
-                .bookerId(userDtoBooker1.getId())
-                .build();
-
         BookingDtoResponse bookingDtoResponse = bookingService.createBooking(bookingDto, userDtoBooker1.getId());
 
         BookingDtoResponse booking = bookingService.patchBooking(bookingDtoResponse.getId(), true, userDto1.getId());
@@ -114,43 +94,18 @@ public class BookingServiceIntegrationTest {
     }
 
     @Test
-    void getBookingTest() {
-        UserDto userDto = UserDto.builder()
-                .name("Max")
-                .email("qwe@qwe.com")
-                .build();
-
-        UserDto userDto1 = userService.createUser(userDto);
-
-        UserDto userDtoBooker = UserDto.builder()
-                .name("Mr. Booker")
-                .email("unique@qwe.com")
-                .build();
-
-        UserDto userDtoBooker1 = userService.createUser(userDtoBooker);
-
-        ItemDtoCreate itemDtoCreate = ItemDtoCreate.builder()
-                .name("ItemName")
-                .description("Description")
-                .available(true)
-                .build();
-
-        ItemDto itemDto1 = itemService.createItem(itemDtoCreate, userDto1.getId());
-
-        BookingDto bookingDto = BookingDto.builder()
-                .start(LocalDateTime.now().plusDays(1))
-                .end(LocalDateTime.MAX)
-                .itemId(itemDto1.getId())
-                .bookerId(userDtoBooker1.getId())
-                .build();
-
+    public void getBookingTest() {
         BookingDtoResponse bookingDtoResponse = bookingService.createBooking(bookingDto, userDtoBooker1.getId());
 
         BookingDtoResponse bookingDtoGet = bookingService.getBooking(bookingDtoResponse.getId(), userDto1.getId());
 
-        assertThat(bookingDto.getStart(), equalTo(bookingDtoGet.getStart()));
-        assertThat(bookingDto.getEnd(), equalTo(bookingDtoGet.getEnd()));
-        assertThat(bookingDto.getItemId(), equalTo(bookingDtoGet.getItem().getId()));
-        assertThat(bookingDto.getBookerId(), equalTo(bookingDtoGet.getBooker().getId()));
+        test(bookingDtoGet);
+    }
+
+    private void test(BookingDtoResponse bookingDtoResponse) {
+        assertThat(bookingDto.getStart(), equalTo(bookingDtoResponse.getStart()));
+        assertThat(bookingDto.getEnd(), equalTo(bookingDtoResponse.getEnd()));
+        assertThat(bookingDto.getItemId(), equalTo(bookingDtoResponse.getItem().getId()));
+        assertThat(bookingDto.getBookerId(), equalTo(bookingDtoResponse.getBooker().getId()));
     }
 }

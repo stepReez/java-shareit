@@ -2,7 +2,6 @@ package ru.practicum.shareit.controllerTest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -20,29 +19,32 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static ru.practicum.shareit.util.Headers.X_SHARER_USER_ID;
 
 @WebMvcTest(controllers = ItemController.class)
 public class ItemControllerTest {
 
     @Autowired
-    ObjectMapper mapper;
+    private ObjectMapper mapper;
 
     @MockBean
-    ItemService itemService;
+    private ItemService itemService;
 
     @Autowired
     private MockMvc mvc;
 
-    ItemDtoCreate itemDtoCreate = ItemDtoCreate.builder()
+    private final ItemDtoCreate itemDtoCreate = ItemDtoCreate.builder()
             .name("Name")
             .description("Description")
             .available(true)
             .build();
 
-    ItemDto itemDto = ItemDto.builder()
+    private final ItemDto itemDto = ItemDto.builder()
             .id(1)
             .name("Name")
             .description("Description")
@@ -50,7 +52,7 @@ public class ItemControllerTest {
             .owner(1)
             .build();
 
-    ItemDtoBooking itemDtoBooking = ItemDtoBooking.builder()
+    private final ItemDtoBooking itemDtoBooking = ItemDtoBooking.builder()
             .id(1)
             .name("Name")
             .description("Description")
@@ -58,7 +60,7 @@ public class ItemControllerTest {
             .owner(1)
             .build();
 
-    CommentDto commentDto = CommentDto.builder()
+    private final CommentDto commentDto = CommentDto.builder()
             .id(1)
             .text("Text")
             .itemId(1)
@@ -68,13 +70,12 @@ public class ItemControllerTest {
 
     @Test
     void createItemTest() throws Exception {
-        Mockito
-                .when(itemService.createItem(Mockito.any(), Mockito.anyLong()))
+        when(itemService.createItem(any(), anyLong()))
                 .thenReturn(itemDto);
 
         mvc.perform(post("/items")
                         .content(mapper.writeValueAsString(itemDtoCreate))
-                        .header("X-Sharer-User-Id", 1)
+                        .header(X_SHARER_USER_ID, 1)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -87,13 +88,12 @@ public class ItemControllerTest {
 
     @Test
     void patchItemTest() throws Exception {
-        Mockito
-                .when(itemService.patchItem(Mockito.any(), Mockito.anyLong(), Mockito.anyLong()))
+        when(itemService.patchItem(any(), anyLong(), anyLong()))
                 .thenReturn(itemDto);
 
         mvc.perform(patch("/items/1")
                         .content(mapper.writeValueAsString(itemDto))
-                        .header("X-Sharer-User-Id", 1)
+                        .header(X_SHARER_USER_ID, 1)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -106,12 +106,11 @@ public class ItemControllerTest {
 
     @Test
     void findItemsByUser() throws Exception {
-        Mockito
-                .when(itemService.findItemsByUser(Mockito.anyLong(), Mockito.anyInt(), Mockito.anyInt()))
+        when(itemService.findItemsByUser(anyLong(), anyInt(), anyInt()))
                 .thenReturn(List.of(itemDtoBooking));
 
         mvc.perform(get("/items")
-                        .header("X-Sharer-User-Id", 1)
+                        .header(X_SHARER_USER_ID, 1)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -120,12 +119,11 @@ public class ItemControllerTest {
 
     @Test
     void searchItem() throws Exception {
-        Mockito
-                .when(itemService.searchItem(Mockito.any(), Mockito.anyInt(), Mockito.anyInt()))
+        when(itemService.searchItem(any(), anyInt(), anyInt()))
                 .thenReturn(List.of(itemDto));
 
         mvc.perform(get("/items/search?text=NA")
-                        .header("X-Sharer-User-Id", 1)
+                        .header(X_SHARER_USER_ID, 1)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -134,13 +132,12 @@ public class ItemControllerTest {
 
     @Test
     void createComment() throws Exception {
-        Mockito
-                .when(itemService.createComment(Mockito.any(), Mockito.anyLong(), Mockito.anyLong()))
+        when(itemService.createComment(any(), anyLong(), anyLong()))
                 .thenReturn(commentDto);
 
         mvc.perform(post("/items/100/comment")
                         .content(mapper.writeValueAsString(commentDto))
-                        .header("X-Sharer-User-Id", 1)
+                        .header(X_SHARER_USER_ID, 1)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))

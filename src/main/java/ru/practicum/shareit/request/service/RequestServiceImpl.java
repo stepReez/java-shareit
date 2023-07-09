@@ -1,6 +1,7 @@
 package ru.practicum.shareit.request.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -30,8 +32,6 @@ public class RequestServiceImpl implements RequestService {
     private final UserRepository userRepository;
 
     private final ItemRepository itemRepository;
-
-    private final Logger log = LoggerFactory.getLogger(RequestServiceImpl.class);
 
     @Override
     public ItemRequestDto createRequest(ItemRequestDto itemRequestDto, long userId) {

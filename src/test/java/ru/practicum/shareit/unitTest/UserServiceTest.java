@@ -1,11 +1,11 @@
 package ru.practicum.shareit.unitTest;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.shareit.exception.EmailException;
 import ru.practicum.shareit.exception.EmailNullException;
@@ -18,173 +18,180 @@ import ru.practicum.shareit.user.service.UserServiceImpl;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.when;
+
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
 
     @Mock
-    UserRepository mockUserRepository;
+    private UserRepository mockUserRepository;
 
-    UserServiceImpl userService;
+    private UserServiceImpl userService;
 
     @BeforeEach
     public void init() {
         userService = new UserServiceImpl(mockUserRepository);
     }
 
-    @Test
-    public void createUserTest() {
-        Mockito
-                .when(mockUserRepository.findAll())
-                .thenReturn(List.of());
+    @Nested
+    @DisplayName("Create Test")
+    class CreateTest {
+        @Test
+        public void createUserTest() {
+            when(mockUserRepository.findAll())
+                    .thenReturn(List.of());
 
-        Mockito
-                .when(mockUserRepository.save(Mockito.any()))
-                .thenReturn(User.builder()
-                        .id(1)
-                        .name("Alex")
-                        .email("qwe@qwe.com")
-                        .build());
+            when(mockUserRepository.save(any()))
+                    .thenReturn(User.builder()
+                            .id(1)
+                            .name("Alex")
+                            .email("qwe@qwe.com")
+                            .build());
 
-        UserDto userDto = UserDto.builder()
-                .name("Alex")
-                .email("qwe@qwe.com")
-                .build();
+            UserDto userDto = UserDto.builder()
+                    .name("Alex")
+                    .email("qwe@qwe.com")
+                    .build();
 
-        UserDto userDto1 = userService.createUser(userDto);
+            UserDto userDto1 = userService.createUser(userDto);
 
-        Assertions.assertEquals(1, userDto1.getId());
-        Assertions.assertEquals("Alex", userDto1.getName());
-        Assertions.assertEquals("qwe@qwe.com", userDto1.getEmail());
+            assertEquals(1, userDto1.getId());
+            assertEquals("Alex", userDto1.getName());
+            assertEquals("qwe@qwe.com", userDto1.getEmail());
+        }
+
+        @Test
+        public void createUserWithNoUniqueEmailTest() {
+            when(mockUserRepository.findAll())
+                    .thenReturn(List.of(User.builder()
+                            .id(1)
+                            .name("Alex")
+                            .email("qwe@qwe.com")
+                            .build()));
+
+            UserDto userDto = UserDto.builder()
+                    .name("Max")
+                    .email("qwe@qwe.com")
+                    .build();
+
+            assertThrows(EmailException.class, () -> userService.createUser(userDto));
+        }
+
+        @Test
+        void createUserWithoutEmail() {
+            UserDto userDto = UserDto.builder()
+                    .name("Max")
+                    .build();
+
+            assertThrows(EmailNullException.class, () -> userService.createUser(userDto));
+        }
     }
 
-    @Test
-    public void createUserWithNoUniqueEmailTest() {
-        Mockito
-                .when(mockUserRepository.findAll())
-                .thenReturn(List.of(User.builder()
-                        .id(1)
-                        .name("Alex")
-                        .email("qwe@qwe.com")
-                        .build()));
+    @Nested
+    @DisplayName("Read Test")
+    class ReadTest {
+        @Test
+        public void findUserTest() {
+            when(mockUserRepository.findById(anyLong()))
+                    .thenReturn(Optional.of(User.builder()
+                            .id(1)
+                            .name("Alex")
+                            .email("qwe@qwe.com")
+                            .build()));
 
-        UserDto userDto = UserDto.builder()
-                .name("Max")
-                .email("qwe@qwe.com")
-                .build();
+            UserDto userDto = userService.findUser(1);
 
-        Assertions.assertThrows(EmailException.class, () -> userService.createUser(userDto));
+            assertEquals(1, userDto.getId());
+            assertEquals("Alex", userDto.getName());
+            assertEquals("qwe@qwe.com", userDto.getEmail());
+        }
+
+        @Test
+        public void findNotExistedUserTest() {
+            when(mockUserRepository.findById(anyLong()))
+                    .thenReturn(Optional.empty());
+
+            assertThrows(NotFoundException.class, () -> userService.findUser(1));
+        }
     }
 
-    @Test
-    public void findUserTest() {
-        Mockito
-                .when(mockUserRepository.findById(Mockito.anyLong()))
-                .thenReturn(Optional.of(User.builder()
-                        .id(1)
-                        .name("Alex")
-                        .email("qwe@qwe.com")
-                        .build()));
+    @Nested
+    @DisplayName("Update Test")
+    class UpdateTest {
+        @Test
+        public void updateUserTest() {
+            when(mockUserRepository.findById(anyLong()))
+                    .thenReturn(Optional.of(User.builder()
+                            .id(1)
+                            .name("Alex")
+                            .email("qwe@qwe.com")
+                            .build()));
 
-        UserDto userDto = userService.findUser(1);
+            when(mockUserRepository.findAll())
+                    .thenReturn(List.of(User.builder()
+                            .id(1)
+                            .name("Alex")
+                            .email("qwe@qwe.com")
+                            .build()));
 
-        Assertions.assertEquals(1, userDto.getId());
-        Assertions.assertEquals("Alex", userDto.getName());
-        Assertions.assertEquals("qwe@qwe.com", userDto.getEmail());
-    }
+            when(mockUserRepository.save(any()))
+                    .thenReturn(User.builder()
+                            .id(1)
+                            .name("Max")
+                            .email("abc@qwe.ru")
+                            .build());
 
-    @Test
-    public void findNotExistedUserTest() {
-        Mockito
-                .when(mockUserRepository.findById(Mockito.anyLong()))
-                .thenReturn(Optional.empty());
+            UserDto userDto = UserDto.builder()
+                    .name("Max")
+                    .email("abc@qwe.ru")
+                    .build();
 
-        Assertions.assertThrows(NotFoundException.class, () -> userService.findUser(1));
-    }
+            UserDto userDtoTest = userService.updateUser(userDto, 1);
 
-    @Test
-    public void updateUserTest() {
-        Mockito
-                .when(mockUserRepository.findById(Mockito.anyLong()))
-                .thenReturn(Optional.of(User.builder()
-                        .id(1)
-                        .name("Alex")
-                        .email("qwe@qwe.com")
-                        .build()));
+            assertEquals(1, userDtoTest.getId());
+            assertEquals("Max", userDtoTest.getName());
+            assertEquals("abc@qwe.ru", userDtoTest.getEmail());
+        }
 
-        Mockito
-                .when(mockUserRepository.findAll())
-                .thenReturn(List.of(User.builder()
-                        .id(1)
-                        .name("Alex")
-                        .email("qwe@qwe.com")
-                        .build()));
+        @Test
+        public void updateNoExistedUserTest() {
+            when(mockUserRepository.findById(anyLong()))
+                    .thenReturn(Optional.empty());
 
-        Mockito
-                .when(mockUserRepository.save(Mockito.any()))
-                .thenReturn(User.builder()
-                        .id(1)
-                        .name("Max")
-                        .email("abc@qwe.ru")
-                        .build());
+            assertThrows(NotFoundException.class, () -> userService.findUser(1));
+        }
 
-        UserDto userDto = UserDto.builder()
-                .name("Max")
-                .email("abc@qwe.ru")
-                .build();
+        @Test
+        public void updateUserWithNoUniqueEmail() {
+            when(mockUserRepository.findById(anyLong()))
+                    .thenReturn(Optional.of(User.builder()
+                            .id(1)
+                            .name("Alex")
+                            .email("qwe@qwe.com")
+                            .build()));
 
-        UserDto userDtoTest = userService.updateUser(userDto, 1);
+            when(mockUserRepository.findAll())
+                    .thenReturn(List.of(User.builder()
+                                    .id(1)
+                                    .name("Alex")
+                                    .email("qwe@qwe.com")
+                                    .build(),
+                            User.builder()
+                                    .id(2)
+                                    .name("Tom")
+                                    .email("abc@qwe.ru")
+                                    .build()));
 
-        Assertions.assertEquals(1, userDtoTest.getId());
-        Assertions.assertEquals("Max", userDtoTest.getName());
-        Assertions.assertEquals("abc@qwe.ru", userDtoTest.getEmail());
-    }
+            UserDto userDto = UserDto.builder()
+                    .name("Max")
+                    .email("abc@qwe.ru")
+                    .build();
 
-    @Test
-    public void updateNoExistedUserTest() {
-        Mockito
-                .when(mockUserRepository.findById(Mockito.anyLong()))
-                .thenReturn(Optional.empty());
-
-        Assertions.assertThrows(NotFoundException.class, () -> userService.findUser(1));
-    }
-
-    @Test
-    public void updateUserWithNoUniqueEmail() {
-        Mockito
-                .when(mockUserRepository.findById(Mockito.anyLong()))
-                .thenReturn(Optional.of(User.builder()
-                        .id(1)
-                        .name("Alex")
-                        .email("qwe@qwe.com")
-                        .build()));
-
-        Mockito
-                .when(mockUserRepository.findAll())
-                .thenReturn(List.of(User.builder()
-                        .id(1)
-                        .name("Alex")
-                        .email("qwe@qwe.com")
-                        .build(),
-                        User.builder()
-                                .id(2)
-                                .name("Tom")
-                                .email("abc@qwe.ru")
-                                .build()));
-
-        UserDto userDto = UserDto.builder()
-                .name("Max")
-                .email("abc@qwe.ru")
-                .build();
-
-        Assertions.assertThrows(EmailException.class, () -> userService.updateUser(userDto, 1));
-    }
-
-    @Test
-    void createUserWithoutEmail() {
-        UserDto userDto = UserDto.builder()
-                .name("Max")
-                .build();
-
-        Assertions.assertThrows(EmailNullException.class, () -> userService.createUser(userDto));
+            assertThrows(EmailException.class, () -> userService.updateUser(userDto, 1));
+        }
     }
 }

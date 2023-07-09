@@ -2,7 +2,6 @@ package ru.practicum.shareit.controllerTest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -17,24 +16,27 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static ru.practicum.shareit.util.Headers.X_SHARER_USER_ID;
 
 @WebMvcTest(controllers = ItemRequestController.class)
 public class ItemRequestControllerTest {
 
     @Autowired
-    ObjectMapper mapper;
+    private ObjectMapper mapper;
 
     @MockBean
-    RequestService requestService;
+    private RequestService requestService;
 
     @Autowired
     private MockMvc mvc;
 
-    ItemRequestDto itemRequestDto = ItemRequestDto.builder()
+    private final ItemRequestDto itemRequestDto = ItemRequestDto.builder()
             .id(1)
             .description("Text")
             .requesterId(1)
@@ -43,13 +45,12 @@ public class ItemRequestControllerTest {
 
     @Test
     void createRequestTest() throws Exception {
-        Mockito
-                .when(requestService.createRequest(Mockito.any(), Mockito.anyLong()))
+        when(requestService.createRequest(any(), anyLong()))
                 .thenReturn(itemRequestDto);
 
         mvc.perform(post("/requests")
                         .content(mapper.writeValueAsString(itemRequestDto))
-                        .header("X-Sharer-User-Id", 1)
+                        .header(X_SHARER_USER_ID, 1)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -60,12 +61,11 @@ public class ItemRequestControllerTest {
 
     @Test
     void getUserRequests() throws Exception {
-        Mockito
-                .when(requestService.getUserRequests(Mockito.anyLong()))
+        when(requestService.getUserRequests(anyLong()))
                 .thenReturn(List.of(itemRequestDto));
 
         mvc.perform(get("/requests")
-                        .header("X-Sharer-User-Id", 1)
+                        .header(X_SHARER_USER_ID, 1)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -74,12 +74,11 @@ public class ItemRequestControllerTest {
 
     @Test
     void getOtherUserRequestsTest() throws Exception {
-        Mockito
-                .when(requestService.getOtherUsersRequests(Mockito.anyLong(), Mockito.anyInt(), Mockito.anyInt()))
+        when(requestService.getOtherUsersRequests(anyLong(), anyInt(), anyInt()))
                 .thenReturn(List.of(itemRequestDto));
 
         mvc.perform(get("/requests/all")
-                        .header("X-Sharer-User-Id", 1)
+                        .header(X_SHARER_USER_ID, 1)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -88,12 +87,11 @@ public class ItemRequestControllerTest {
 
     @Test
     void getOneRequestTest() throws Exception {
-        Mockito
-                .when(requestService.getOneRequest(Mockito.anyLong(), Mockito.anyLong()))
+        when(requestService.getOneRequest(anyLong(), anyLong()))
                 .thenReturn(itemRequestDto);
 
         mvc.perform(get("/requests/1")
-                        .header("X-Sharer-User-Id", 1)
+                        .header(X_SHARER_USER_ID, 1)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))

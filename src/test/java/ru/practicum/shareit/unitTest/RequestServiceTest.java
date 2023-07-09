@@ -1,11 +1,9 @@
 package ru.practicum.shareit.unitTest;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.shareit.exception.BookingBadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -17,19 +15,23 @@ import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.when;
+
 @ExtendWith(MockitoExtension.class)
 public class RequestServiceTest {
 
     @Mock
-    RequestRepository requestRepository;
+    private RequestRepository requestRepository;
 
     @Mock
-    ItemRepository itemRepository;
+    private ItemRepository itemRepository;
 
     @Mock
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
-    RequestServiceImpl requestService;
+    private RequestServiceImpl requestService;
 
     @BeforeEach
     public void init() {
@@ -38,11 +40,10 @@ public class RequestServiceTest {
 
     @Test
     void createRequestUserNotExist() {
-        Mockito
-                .when(userRepository.findById(Mockito.anyLong()))
+        when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.empty());
 
-        Assertions.assertThrows(NotFoundException.class, () -> requestService.createRequest(
+        assertThrows(NotFoundException.class, () -> requestService.createRequest(
                 ItemRequestDto.builder().build(),
                 1
         ));
@@ -50,25 +51,23 @@ public class RequestServiceTest {
 
     @Test
     void getUserRequestsUserNotExist() {
-        Mockito
-                .when(userRepository.findById(Mockito.anyLong()))
+        when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.empty());
 
-        Assertions.assertThrows(NotFoundException.class, () -> requestService.getUserRequests(1));
+        assertThrows(NotFoundException.class, () -> requestService.getUserRequests(1));
     }
 
     @Test
     void getOneRequestUserNotExist() {
-        Mockito
-                .when(userRepository.findById(Mockito.anyLong()))
+        when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.empty());
 
-        Assertions.assertThrows(NotFoundException.class, () -> requestService.getOneRequest(1, 1));
+        assertThrows(NotFoundException.class, () -> requestService.getOneRequest(1, 1));
     }
 
     @Test
     void getOtherUsersRequestsBadRequestTest() {
-        Assertions.assertThrows(BookingBadRequestException.class,
+        assertThrows(BookingBadRequestException.class,
                 () -> requestService.getOtherUsersRequests(1, -10, 1));
     }
 }
