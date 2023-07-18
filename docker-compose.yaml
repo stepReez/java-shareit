@@ -10,8 +10,8 @@ services:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
 
-  shareit-server:
-    image: shareit-server
+  server:
+    image: server
     build: .
     ports:
       - "9090:9090"
@@ -24,12 +24,12 @@ services:
       - DB_HOST=db
       - DB_PORT=5432
 
-  shareit-gateway:
-    image: shareit-gateway
+  gateway:
+    image: gateway
     build: .
     ports:
       - "8080:8080"
     depends_on:
       - shareit-server
     environment:
-      - SHAREIT_SERVER_URL=http://shareit-server:9090
+      - SHAREIT_SERVER_URL=http://server:9090
