@@ -8,7 +8,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.gateway.booking.dto.BookItemRequestDto;
-import ru.practicum.shareit.gateway.booking.dto.BookingState;
 import ru.practicum.shareit.gateway.util.Headers;
 
 import javax.validation.Valid;

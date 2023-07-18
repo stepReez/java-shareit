@@ -160,17 +160,11 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private void valid(BookingDto booking, long id) {
-        if (booking.getStart().equals(booking.getEnd())) {
-            throw new BookingBadRequestException("End and start of booking cannot be equal");
-        }
         if (userRepository.findById(booking.getBookerId()).isEmpty()) {
             throw new NotFoundException(String.format("User with id = %d not found", booking.getBookerId()));
         }
         if (itemRepository.findById(booking.getItemId()).isEmpty()) {
             throw new NotFoundException(String.format("Item with id = %d not found", booking.getItemId()));
-        }
-        if (booking.getStart().isAfter(booking.getEnd())) {
-            throw new BookingBadRequestException("End of booking cannot be before the start");
         }
         if (!itemRepository.findById(booking.getItemId()).get().getAvailable()) {
             throw new BookingBadRequestException("Item unavailable");

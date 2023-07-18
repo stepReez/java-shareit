@@ -67,24 +67,6 @@ public class BookingServiceTest {
         }
 
         @Test
-        public void createBookingTimeValidationTest() {
-            when(itemRepository.findById(anyLong()))
-                    .thenReturn(Optional.of(Item.builder()
-                            .id(1)
-                            .owner(1)
-                            .build()));
-
-            LocalDateTime localDateTimeNow = LocalDateTime.now();
-            BookingDto bookingDto = BookingDto.builder()
-                    .start(localDateTimeNow)
-                    .end(localDateTimeNow)
-                    .itemId(1)
-                    .build();
-
-            assertThrows(BookingBadRequestException.class, () -> bookingService.createBooking(bookingDto, 1));
-        }
-
-        @Test
         public void createBookingUserNotExistTest() {
             when(itemRepository.findById(anyLong()))
                     .thenReturn(Optional.of(Item.builder()
@@ -137,27 +119,6 @@ public class BookingServiceTest {
             BookingDto bookingDto = BookingDto.builder()
                     .start(LocalDateTime.now())
                     .end(LocalDateTime.MAX)
-                    .itemId(1)
-                    .build();
-
-            assertThrows(BookingBadRequestException.class, () -> bookingService.createBooking(bookingDto, 1));
-        }
-
-        @Test
-        public void createBookingEndBeforeStartTest() {
-            when(itemRepository.findById(anyLong()))
-                    .thenReturn(Optional.of(Item.builder()
-                            .id(1)
-                            .owner(1)
-                            .available(true)
-                            .build()));
-
-            when(userRepository.findById(anyLong()))
-                    .thenReturn(Optional.of(new User()));
-
-            BookingDto bookingDto = BookingDto.builder()
-                    .end(LocalDateTime.now())
-                    .start(LocalDateTime.MAX)
                     .itemId(1)
                     .build();
 

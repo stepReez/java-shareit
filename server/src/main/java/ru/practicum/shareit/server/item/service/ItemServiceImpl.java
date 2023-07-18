@@ -111,7 +111,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<ItemDtoBooking> findItemsByUser(long userId, int from, int size) {
         Pageable pageable = PageRequest.of(from / size, size);
-        List<ItemDtoBooking> itemDtoList = itemRepository.findByOwner(userId, pageable).stream()
+        List<ItemDtoBooking> itemDtoList = itemRepository.findByOwnerOrderById(userId, pageable).stream()
                 .map(ItemMapper::toItemDtoBooking)
                 .collect(Collectors.toList());
         itemDtoList.stream()

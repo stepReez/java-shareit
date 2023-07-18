@@ -10,6 +10,7 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.shareit.gateway.booking.dto.BookItemRequestDto;
 import ru.practicum.shareit.gateway.booking.dto.BookingState;
 import ru.practicum.shareit.gateway.client.BaseClient;
+import ru.practicum.shareit.gateway.exception.BookingBadRequestException;
 
 import java.util.Map;
 
@@ -40,6 +41,7 @@ public class BookingClient extends BaseClient {
 
 
     public ResponseEntity<Object> bookItem(long userId, BookItemRequestDto requestDto) {
+        valid(requestDto);
         return post("", userId, requestDto);
     }
 
@@ -60,5 +62,14 @@ public class BookingClient extends BaseClient {
 
     public ResponseEntity<Object> patchBooking(long bookingId, boolean approved, long userId) {
         return patch("/" + bookingId + "?approved=" + approved, userId);
+    }
+
+    private void valid(BookItemRequestDto booking) {
+        if (booking.getStart().equals(booking.getEnd())) {
+            throw new BookingBadRequestException("End and start of booking cannot be equal");
+        }
+        if (booking.getStart().isAfter(booking.getEnd())) {
+            throw new BookingBadRequestException("End of booking cannot be before the start");
+        }
     }
 }
