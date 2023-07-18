@@ -9,8 +9,6 @@ import ru.practicum.shareit.gateway.item.dto.ItemDtoCreate;
 import ru.practicum.shareit.gateway.util.Headers;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 
