@@ -41,7 +41,6 @@ public class BookingClient extends BaseClient {
 
 
     public ResponseEntity<Object> bookItem(long userId, BookItemRequestDto requestDto) {
-        valid(requestDto);
         return post("", userId, requestDto);
     }
 
@@ -62,14 +61,5 @@ public class BookingClient extends BaseClient {
 
     public ResponseEntity<Object> patchBooking(long bookingId, boolean approved, long userId) {
         return patch("/" + bookingId + "?approved=" + approved, userId);
-    }
-
-    private void valid(BookItemRequestDto booking) {
-        if (booking.getStart().equals(booking.getEnd())) {
-            throw new BookingBadRequestException("End and start of booking cannot be equal");
-        }
-        if (booking.getStart().isAfter(booking.getEnd())) {
-            throw new BookingBadRequestException("End of booking cannot be before the start");
-        }
     }
 }

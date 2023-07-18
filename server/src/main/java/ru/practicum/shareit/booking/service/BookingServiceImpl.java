@@ -172,5 +172,11 @@ public class BookingServiceImpl implements BookingService {
         if (booking.getBookerId() == id) {
             throw new NotFoundException("Booker cannot be the owner");
         }
+        if (booking.getStart().equals(booking.getEnd())) {
+            throw new BookingBadRequestException("End and start of booking cannot be equal");
+        }
+        if (booking.getStart().isAfter(booking.getEnd())) {
+            throw new BookingBadRequestException("End of booking cannot be before the start");
+        }
     }
 }
