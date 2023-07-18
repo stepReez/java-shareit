@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.server.request.util.RequestMapper;
 import ru.practicum.shareit.server.request.dto.ItemRequestDto;
-import ru.practicum.shareit.server.exception.BookingBadRequestException;
 import ru.practicum.shareit.server.exception.NotFoundException;
 import ru.practicum.shareit.server.item.repository.ItemRepository;
 import ru.practicum.shareit.server.item.util.ItemMapper;
