@@ -6,6 +6,7 @@ import javax.validation.constraints.Future;
 import javax.validation.constraints.FutureOrPresent;
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,9 +19,11 @@ public class BookItemRequestDto {
 
     @FutureOrPresent
     @NotNull
+    @JsonFormat
     private LocalDateTime start;
 
     @Future
     @NotNull
+    @JsonFormat
     private LocalDateTime end;
 }
